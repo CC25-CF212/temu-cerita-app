@@ -1,9 +1,9 @@
 "use client";
 
+import SideMenu from "@/components/SideMenu";
+import { mockUsers } from "@/data/mockData";
 import { useState, useEffect, SetStateAction } from "react";
 import { createRoot } from "react-dom/client";
-import SideMenu from "../../components/SideMenu";
-import { mockUsers } from "../../data/mockData";
 
 export default function UserPage() {
   const [users, setUsers] = useState(mockUsers);
