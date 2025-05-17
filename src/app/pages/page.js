@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
 import Head from "next/head";
-import Header from "./components/Header";
-import Navbar from "./components/Navbar";
-import ArticleCard from "./components/ArticleCard";
-import SidePanel from "./components/SidePanel";
+import Header from "../../components/pages/components/Header";
+import Footer from "../../components/pages/components/Footer";
+import Navbar from "../../components/pages/components/Navbar";
+import ArticleCard from "../../components/pages/components/ArticleCard";
+import SidePanel from "../../components/pages/components/SidePanel";
 export default function Home() {
   const [activeTab, setActiveTab] = useState("For You");
 
@@ -194,6 +195,7 @@ export default function Home() {
 
         <SidePanel activeTab={activeTab} />
       </main>
+      <Footer />
     </div>
   );
 }

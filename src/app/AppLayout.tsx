@@ -51,9 +51,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   // Jika di halaman login, tampilkan hanya children tanpa layout
-  const noLayoutPaths = ["/login", "/register", "/forgot-password", "/pages"];
+  const noLayoutPaths = ["/login", "/register", "/forgot-password"];
 
-  if (noLayoutPaths.includes(pathname) || is404) {
+  if (
+    noLayoutPaths.includes(pathname) ||
+    pathname.startsWith("/pages") ||
+    is404
+  ) {
     return <>{children}</>;
   }
 

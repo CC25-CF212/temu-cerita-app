@@ -174,3 +174,11 @@ export const mockUsers = [
     activeDate: "12-04-2024",
   },
 ];
+export const teamMembers = [
+  { id: 1, name: "Teo", avatarUrl: "/images/teo.jpg" },
+  { id: 2, name: "Apipah", avatarUrl: "/images/Apipah.jpg" },
+  { id: 4, name: "Ananda Andreas", avatarUrl: "/images/gambar.png" },
+  { id: 5, name: "Robil", avatarUrl: "/images/robil.jpeg" },
+  { id: 6, name: "Deby", avatarUrl: "/images/debi.jpeg" },
+  { id: 7, name: "Nadhif", avatarUrl: "/images/gambar.png" },
+];

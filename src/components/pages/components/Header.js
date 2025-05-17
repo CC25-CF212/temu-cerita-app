@@ -49,7 +49,7 @@ const Header = () => {
       >
         <div className="max-w-screen-xl mx-auto flex items-center justify-between py-3 px-4">
           <div className="flex items-center">
-            <Link href="/">
+            <Link href="/pages">
               <h1
                 className={`text-2xl font-bold ${
                   darkMode ? "text-white" : "text-black"
@@ -206,7 +206,7 @@ const Header = () => {
             </div>
 
             <Link
-              href="/write"
+              href="/pages/article/post"
               className={`flex items-center gap-2 ${
                 darkMode ? "hover:text-gray-300" : "hover:text-gray-600"
               }`}

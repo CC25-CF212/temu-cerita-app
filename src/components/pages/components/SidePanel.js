@@ -187,6 +187,7 @@ const SidePanel = ({ activeTab }) => {
           Show 5 more
         </button>
       </div>
+      <div className="border-b border-gray-200 mb-8"></div>
     </aside>
   );
 };

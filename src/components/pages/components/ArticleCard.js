@@ -39,7 +39,7 @@ const ArticleCard = ({ article }) => {
 
   return (
     <div className="border-b border-gray-200 py-6 transition-all duration-300 hover:bg-gray-50">
-      <Link href={`/article/${article.id}`} className="block">
+      <Link href={`/pages/article/detail/${article.id}`} className="block">
         <div className="flex flex-col sm:flex-row">
           <div className="flex-1 pr-0 sm:pr-4">
             <div className="text-sm text-gray-600 mb-2 flex items-center">
