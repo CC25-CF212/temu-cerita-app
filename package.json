@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@lottiefiles/react-lottie-player": "^3.6.0",
     "chart.js": "^4.4.9",
     "framer-motion": "^12.12.1",
     "lucide-react": "^0.510.0",

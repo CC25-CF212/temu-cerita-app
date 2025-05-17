@@ -153,7 +153,7 @@ export default function Home() {
     "For You",
     "All Article",
     "Regional Exploration",
-    "Categories",
+    // "Categories",
   ];
   // Mendapatkan artikel yang sesuai dengan tab aktif
   const currentArticles = articlesByCategory[activeTab] || [];

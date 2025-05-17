@@ -215,7 +215,7 @@ const Header = () => {
               <span className="hidden sm:inline">Write</span>
             </Link>
 
-            <Link href="/profile">
+            <Link href="/pages/profile">
               <div
                 className={`w-10 h-10 rounded-full ${
                   darkMode ? "bg-gray-700" : "bg-gray-200"

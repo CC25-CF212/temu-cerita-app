@@ -8,12 +8,12 @@ import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 // Dynamically import Chart components to avoid SSR issues with chart.js
 const CategoryChart = dynamic(
-  () => import("../../components/Dashboard/CategoryChart"),
+  () => import("../../../components/Dashboard/CategoryChart"),
   { ssr: false }
 );
 
 const ArticleChart = dynamic(
-  () => import("../../components/Dashboard/ArticleChart"),
+  () => import("../../../components/Dashboard/ArticleChart"),
   { ssr: false }
 );
 

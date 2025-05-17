@@ -1,16 +1,29 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import dynamic from "next/dynamic";
+
+// Load LottieAnimation hanya di client-side
+const LottieAnimation = dynamic(
+  () => import("./pages/components/LottieAnimation"),
+  {
+    ssr: false,
+  }
+);
 
 export default function LoginForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState("");
+  const router = useRouter();
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // TODO: Handle login
-  }
+    router.push("/pages");
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -18,7 +31,9 @@ export default function LoginForm() {
         {/* Left Side - Form */}
         <div className="w-full md:w-1/2 p-10">
           <h2 className="text-3xl font-bold text-gray-900">Log in</h2>
-          <p className="text-gray-600 mt-2 mb-6">Welcome back! Please enter your details.</p>
+          <p className="text-gray-600 mt-2 mb-6">
+            Welcome back! Please enter your details.
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -52,16 +67,21 @@ export default function LoginForm() {
           </form>
 
           <p className="text-sm text-center mt-6">
-            Don't have account ?{' '}
-            <Link href="/register" className="text-blue-600 hover:underline">
+            Don't have account ?{" "}
+            <Link
+              href="/pages/daftar"
+              className="text-blue-600 hover:underline"
+            >
               Create Account
             </Link>
           </p>
         </div>
 
         {/* Right Side - Image Placeholder */}
-        <div className="hidden md:block md:w-1/2 bg-gray-300 rounded-r-2xl"></div>
+        <div className="hidden md:block md:w-1/2 bg-gray-300 rounded-r-2xl">
+          <LottieAnimation src="/animasi/1747491395293.json" />
+        </div>
       </div>
     </div>
-  )
+  );
 }
