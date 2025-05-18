@@ -3,8 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Player } from "@lottiefiles/react-lottie-player";
-
+import dynamic from "next/dynamic";
+// Load LottieAnimation hanya di client-side
+const LottieAnimation = dynamic(
+  () => import("../../../components/pages/components/LottieAnimation"),
+  {
+    ssr: false,
+  }
+);
 export default function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -13,7 +19,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
     // Form validation
@@ -39,7 +45,7 @@ export default function Register() {
       <div className="w-full max-w-4xl flex bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="w-1/2 bg-gray-300">
           {/* Image or logo could go here */}
-          <Player autoplay loop src="/animasi/1747490997273.json" />
+          <LottieAnimation src="/animasi/1747490997273.json" />
         </div>
         <div className="w-1/2 p-8">
           <div className="mb-8">
