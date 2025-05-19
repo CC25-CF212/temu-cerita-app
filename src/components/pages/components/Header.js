@@ -95,7 +95,7 @@ const Header = () => {
             </button>
 
             {/* Notifikasi */}
-            <div className="relative" ref={notificationRef}>
+            {/* <div className="relative" ref={notificationRef}>
               <button
                 onClick={toggleNotifications}
                 className={`p-2 rounded-full ${
@@ -109,10 +109,10 @@ const Header = () => {
                     {notificationCount}
                   </span>
                 )}
-              </button>
+              </button> */}
 
-              {/* Panel Notifikasi */}
-              {showNotifications && (
+            {/* Panel Notifikasi */}
+            {/* {showNotifications && (
                 <div className="absolute right-0 mt-2 w-72 rounded-md shadow-lg z-50 overflow-hidden">
                   <div
                     className={`${
@@ -202,8 +202,8 @@ const Header = () => {
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+              )} */}
+            {/* </div> */}
 
             <Link
               href="/pages/article/post"
