@@ -1,16 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Search, Edit, User, Bell, Moon, Sun } from "lucide-react";
-
+import { Search, Edit, User, Bell, Moon, Sun, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 const Header = () => {
+  const router = useRouter();
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
   const [darkMode, setDarkMode] = useState(false); // Set default ke dark mode
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const notificationRef = useRef(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const logoutRef = useRef(null);
 
   // Handle klik di luar area notifikasi untuk menutup panel
   useEffect(() => {
+    console.log(session);
     function handleClickOutside(event) {
       if (
         notificationRef.current &&
@@ -18,12 +24,15 @@ const Header = () => {
       ) {
         setShowNotifications(false);
       }
+      if (logoutRef.current && !logoutRef.current.contains(event.target)) {
+        setShowLogoutConfirm(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [notificationRef]);
+  }, [notificationRef, logoutRef]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -36,7 +45,24 @@ const Header = () => {
       setNotificationCount(0); // Reset notifikasi saat dibuka
     }
   };
+  const toggleLogoutConfirm = () => {
+    setShowLogoutConfirm(!showLogoutConfirm);
+  };
 
+  const handleLogout = async () => {
+    try {
+      await signOut({ redirect: false });
+
+      // Optional: handle any additional cleanup
+      //localStorage.removeItem("user_preferences");
+
+      // Redirect to login page
+      router.push("/pages/login");
+      router.refresh(); // For app router, refresh is important to update UI
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
   return (
     <>
       {/* Header yang fixed di atas */}
@@ -227,6 +253,54 @@ const Header = () => {
                 />
               </div>
             </Link>
+            {/* Tombol Logout */}
+            <div className="relative" ref={logoutRef}>
+              <button
+                onClick={toggleLogoutConfirm}
+                className={`flex items-center gap-2 ${
+                  darkMode ? "hover:text-gray-300" : "hover:text-gray-600"
+                }`}
+                aria-label="Logout"
+              >
+                <LogOut size={20} />
+              </button>
+
+              {/* Konfirmasi Logout */}
+              {showLogoutConfirm && (
+                <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg z-50 overflow-hidden">
+                  <div
+                    className={`p-4 ${
+                      darkMode
+                        ? "bg-gray-800 text-white"
+                        : "bg-white text-gray-900"
+                    }`}
+                  >
+                    <h3 className="font-medium mb-2">Konfirmasi Logout</h3>
+                    <p className="text-sm mb-4">
+                      Apakah Anda yakin ingin keluar dari akun?
+                    </p>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => setShowLogoutConfirm(false)}
+                        className={`px-3 py-1 rounded text-sm ${
+                          darkMode
+                            ? "bg-gray-700 hover:bg-gray-600"
+                            : "bg-gray-200 hover:bg-gray-300"
+                        }`}
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="px-3 py-1 rounded text-sm bg-red-500 hover:bg-red-600 text-white"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>

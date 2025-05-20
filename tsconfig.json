@@ -36,7 +36,8 @@
     "src/app/pages/article/detail/[id]/page.js",
     "src/app/pages/article/post/page.bck",
     "src/app/admin/article/post/page.js",
-    "src/components/admin/Article/post/EditorToolbar.js"
+    "src/components/admin/Article/post/EditorToolbar.js",
+    "src/providers/auth-provider.js"
   ],
   "exclude": [
     "node_modules"

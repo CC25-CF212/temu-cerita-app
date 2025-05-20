@@ -6,6 +6,7 @@ import Footer from "../../components/pages/components/Footer";
 import Navbar from "../../components/pages/components/Navbar";
 import ArticleCard from "../../components/pages/components/ArticleCard";
 import SidePanel from "../../components/pages/components/SidePanel";
+import { AuthCheck } from "../../components/auth-check";
 export default function Home() {
   const [activeTab, setActiveTab] = useState("For You");
 
@@ -158,44 +159,48 @@ export default function Home() {
   // Mendapatkan artikel yang sesuai dengan tab aktif
   const currentArticles = articlesByCategory[activeTab] || [];
   return (
-    <div className="min-h-screen bg-white">
-      <Head>
-        <title>TemuCerita - {activeTab}</title>
-        <meta
-          name="description"
-          content={`Discover ${activeTab} stories and articles on TemuCerita`}
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <>
+      <AuthCheck>
+        <div className="min-h-screen bg-white">
+          <Head>
+            <title>TemuCerita - {activeTab}</title>
+            <meta
+              name="description"
+              content={`Discover ${activeTab} stories and articles on TemuCerita`}
+            />
+            <link rel="icon" href="/favicon.ico" />
+          </Head>
 
-      <Header />
+          <Header />
 
-      <main className="flex flex-col md:flex-row max-w-screen-xl mx-auto px-4">
-        <div className="w-full md:w-3/4 pr-0 md:pr-8">
-          <Navbar
-            categories={categories}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-          />
+          <main className="flex flex-col md:flex-row max-w-screen-xl mx-auto px-4">
+            <div className="w-full md:w-3/4 pr-0 md:pr-8">
+              <Navbar
+                categories={categories}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+              />
 
-          <div className="mt-4">
-            {currentArticles.length > 0 ? (
-              currentArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))
-            ) : (
-              <div className="text-center py-16">
-                <p className="text-gray-500">
-                  No articles found for this category.
-                </p>
+              <div className="mt-4">
+                {currentArticles.length > 0 ? (
+                  currentArticles.map((article) => (
+                    <ArticleCard key={article.id} article={article} />
+                  ))
+                ) : (
+                  <div className="text-center py-16">
+                    <p className="text-gray-500">
+                      No articles found for this category.
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        <SidePanel activeTab={activeTab} />
-      </main>
-      <Footer />
-    </div>
+            <SidePanel activeTab={activeTab} />
+          </main>
+          <Footer />
+        </div>
+      </AuthCheck>
+    </>
   );
 }

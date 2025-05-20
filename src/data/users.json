@@ -1,0 +1,68 @@
+[
+  {
+    "id": "5a289466-6d32-4b4c-b861-6439ab72037d",
+    "name": "Robil",
+    "email": "robilputra@gmail.com",
+    "password": "$2b$10$C0NdCzmf0UEe4k/OfCZRTOuMgSpF4V/umucUccVA.xPb2WhIUKbzG",
+    "profile_picture": "/images/gambar.png",
+    "created_at": "2025-05-20T06:24:10.708Z",
+    "updated_at": "2025-05-20T06:24:10.710Z",
+    "active": true,
+    "admin": false
+  },
+  {
+    "id": "aa13f5e0-24d8-42a2-a655-1d828724c148",
+    "name": "Robil",
+    "email": "robilputra19@gmail.com",
+    "password": "$2b$10$PqAh3q58g8j9RHHTzROI..JR323pFDfSj2xuV/lwJy0HA8udIp.ki",
+    "profile_picture": "/images/gambar.png",
+    "created_at": "2025-05-20T06:24:53.373Z",
+    "updated_at": "2025-05-20T06:24:53.373Z",
+    "active": true,
+    "admin": false
+  },
+  {
+    "id": "ab7b616f-8f39-4071-a865-335c05e5f374",
+    "name": "robiltest",
+    "email": "a@gmail.com",
+    "password": "$2b$10$saK/GM1g/yF5ae/QCOIYPuwSjwL/cK6UZvOX3YBmmHm1CLi1t1yQu",
+    "profile_picture": "/images/gambar.png",
+    "created_at": "2025-05-20T06:55:02.424Z",
+    "updated_at": "2025-05-20T06:55:02.424Z",
+    "active": true,
+    "admin": false
+  },
+  {
+    "id": "4b10b53d-3034-42d5-a771-7a988c9ae26c",
+    "name": "Robil",
+    "email": "robil14022019@gmail.com",
+    "password": "$2b$10$XyILbaYKMhx/.Pk1iZruOOdW6IBPRaOf2IA4S9kRqa2ojRzV.2TTC",
+    "profile_picture": "/images/gambar.png",
+    "created_at": "2025-05-20T06:56:23.788Z",
+    "updated_at": "2025-05-20T06:56:23.788Z",
+    "active": true,
+    "admin": false
+  },
+  {
+    "id": "516169c4-85a8-46d3-a834-fed0ef44897d",
+    "name": "Wokwi Tugas 4",
+    "email": "robildev97@gmail.com",
+    "password": "$2b$10$hXcL8nlEOhR6eqRZ0l4hjubeRJnOQ7OkexODb6Ge3FM3HctTg.kxy",
+    "profile_picture": "/images/gambar.png",
+    "created_at": "2025-05-20T06:59:18.742Z",
+    "updated_at": "2025-05-20T06:59:18.742Z",
+    "active": true,
+    "admin": false
+  },
+  {
+    "id": "820d4faf-d843-43a0-92b7-5dfcb45034c3",
+    "name": "alext12",
+    "email": "0102524719@student.uai.ac.id",
+    "password": "$2b$10$WuwCjseAWpauRNxvlXWawukNrjllmmy5dDDp2rJ/.3iHfa7QpZ0ru",
+    "profile_picture": "/images/gambar.png",
+    "created_at": "2025-05-20T07:04:32.659Z",
+    "updated_at": "2025-05-20T07:04:32.659Z",
+    "active": true,
+    "admin": false
+  }
+]

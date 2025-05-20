@@ -13,7 +13,7 @@ import InteractionBar from "@/components/pages/components/InteractionBar";
 import SidebarArticle from "@/components/pages/components/SidebarArticle";
 import CommentSection from "@/components/pages/components/CommentSection";
 import InteractiveGallery from "@/components/pages/components/InteractiveGallery";
-import { galleryItems } from "@/lib/galleryItems";
+import { galleryItems } from "@/data/galleryItems";
 export default function ArticleDetail() {
   const [isMounted, setIsMounted] = useState(false);
 
