@@ -43,7 +43,7 @@ export default function SideMenu() {
         <ul>
           <li className="mb-2">
             <Link
-              href="/dashboard"
+              href="/admin/dashboard"
               className={`flex items-center ${
                 pathname === "/dashboard" ? "bg-emerald-800" : ""
               } hover:bg-emerald-800 rounded-md p-2 transition-colors`}
@@ -70,7 +70,7 @@ export default function SideMenu() {
           </li>
           <li className="mb-2">
             <Link
-              href="/article"
+              href="/admin/article"
               className={`flex items-center ${
                 pathname === "/article" ? "bg-emerald-800" : ""
               } hover:bg-emerald-800 rounded-md p-2 transition-colors`}
@@ -98,7 +98,7 @@ export default function SideMenu() {
           </li>
           <li className="mb-2">
             <Link
-              href="/user"
+              href="/admin/user"
               className={`flex items-center ${
                 pathname === "/user" ? "bg-emerald-800" : ""
               } hover:bg-emerald-800 rounded-md p-2 transition-colors`}
@@ -129,7 +129,7 @@ export default function SideMenu() {
         <ul>
           <li className="mb-2">
             <Link
-              href="/user/setting"
+              href="/admin/user/setting"
               className={`flex items-center ${
                 pathname === "/setting/user" ? "bg-emerald-800" : ""
               } hover:bg-emerald-800 rounded-md p-2 transition-colors`}

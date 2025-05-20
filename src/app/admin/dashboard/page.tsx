@@ -1,6 +1,6 @@
 "use client";
 
-import UserCard from "@/components/Dashboard/UserCard";
+import UserCard from "@/components/admin/Dashboard/UserCard";
 import SideMenu from "@/components/SideMenu";
 import { mockCategories, yearlyArticles } from "@/data/mockData";
 import dynamic from "next/dynamic";
@@ -8,12 +8,12 @@ import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 // Dynamically import Chart components to avoid SSR issues with chart.js
 const CategoryChart = dynamic(
-  () => import("../../../components/Dashboard/CategoryChart"),
+  () => import("../../../components/admin/Dashboard/CategoryChart"),
   { ssr: false }
 );
 
 const ArticleChart = dynamic(
-  () => import("../../../components/Dashboard/ArticleChart"),
+  () => import("../../../components/admin/Dashboard/ArticleChart"),
   { ssr: false }
 );
 

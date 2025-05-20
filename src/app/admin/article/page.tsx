@@ -1,6 +1,6 @@
 "use client";
 
-import ArticleTable from "@/components/Article/ArticleTable";
+import ArticleTable from "@/components/admin/Article/ArticleTable";
 import SideMenu from "@/components/SideMenu";
 import { mockArticles } from "@/data/mockData";
 import { useEffect } from "react";

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MessageCircle,
   Heart,
@@ -12,7 +12,16 @@ import Footer from "../../../../../components/pages/components/Footer";
 import InteractionBar from "@/components/pages/components/InteractionBar";
 import SidebarArticle from "@/components/pages/components/SidebarArticle";
 import CommentSection from "@/components/pages/components/CommentSection";
+import InteractiveGallery from "@/components/pages/components/InteractiveGallery";
+import { galleryItems } from "@/lib/galleryItems";
 export default function ArticleDetail() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Safe way to handle client-side rendering of images
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [likes, setLikes] = useState(25);
   const [isLiked, setIsLiked] = useState(false);
@@ -67,7 +76,18 @@ export default function ArticleDetail() {
       setCommentText("");
     }
   };
-
+  // If not mounted, show a simple loading state
+  if (!isMounted) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-5 bg-gray-50">
+        <div className="animate-pulse">
+          <div className="h-12 bg-gray-300 rounded mb-4"></div>
+          <div className="h-64 bg-gray-300 rounded mb-4"></div>
+          <div className="h-32 bg-gray-300 rounded"></div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -81,7 +101,7 @@ export default function ArticleDetail() {
             <div className="flex items-center mb-4">
               <div className="h-10 w-10 rounded-full bg-gray-300 mr-3"></div>
               <div>
-                <h3 className="font-medium">Ananda Ganteng</h3>
+                <h3 className="font-medium">Author</h3>
                 <div className="flex items-center text-sm text-gray-500">
                   <span>3 days ago</span>
                   <span className="mx-2">•</span>
@@ -95,7 +115,8 @@ export default function ArticleDetail() {
               Build an Agentic Workflow for your BigQuery data using LangGraph
               and Gemini
             </h1>
-
+            {/* Gallery Component */}
+            <InteractiveGallery galleryItems={galleryItems} className="mb-8" />
             {/* Article content */}
             <div className="prose max-w-none mb-8">
               <p className="text-lg mb-4">
