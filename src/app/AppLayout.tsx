@@ -1,5 +1,6 @@
 "use client";
 
+import TemuCeritaChat from "@/components/pages/components/TemuCeritaChat";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
@@ -21,7 +22,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     pathname.startsWith("/pages") ||
     is404
   ) {
-    return <>{children}</>;
+    return (
+      <>
+        {children} <TemuCeritaChat darkMode={false} />
+      </>
+    );
   }
 
   return (

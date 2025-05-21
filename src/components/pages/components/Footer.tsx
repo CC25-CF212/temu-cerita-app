@@ -1,6 +1,7 @@
 import { teamMembers } from "@/data/mockData";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import ChatBox from "./ChatBox";
 const Footer: React.FC = () => {
   const [focusedImage, setFocusedImage] = useState<string | null>(null);
 
