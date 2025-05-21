@@ -1,6 +1,7 @@
 "use client";
 
 import TemuCeritaChat from "@/components/pages/components/TemuCeritaChat";
+import { AuthProvider } from "@/context/AuthContext";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
@@ -24,7 +25,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   ) {
     return (
       <>
-        {children} <TemuCeritaChat darkMode={false} />
+        <AuthProvider>
+          {children}
+          <TemuCeritaChat darkMode={false} />
+        </AuthProvider>
       </>
     );
   }

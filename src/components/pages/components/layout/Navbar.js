@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
 
 const Navbar = ({ categories, activeTab, setActiveTab }) => {
-  // State untuk animasi transisi
   const [animating, setAnimating] = useState(false);
-  // Efek untuk animasi saat tab berubah
   useEffect(() => {
     if (animating) {
       const timer = setTimeout(() => {
         setAnimating(false);
-      }, 300); // Durasi animasi
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [animating]);
 
-  // Handler untuk perubahan tab
   const handleTabChange = (category) => {
     if (category !== activeTab) {
       setAnimating(true);
@@ -23,11 +20,9 @@ const Navbar = ({ categories, activeTab, setActiveTab }) => {
   const handleTabChangeKategori = (category) => {
     if (category === "All") {
       console.log("Pindah ke halaman kategori");
-      // Misal kasih delay dulu sebelum pindah halaman supaya animasi jalan
       setTimeout(() => {
-        // router.push("/pages/kategori");
         window.location.href = "/pages/kategori";
-      }, 300); // durasi delay sama dengan animasi
+      }, 300);
     }
   };
 
@@ -55,7 +50,6 @@ const Navbar = ({ categories, activeTab, setActiveTab }) => {
             </button>
           </li>
         ))}
-        {/* Tab tambahan di luar map */}
         <li className="mr-8 whitespace-nowrap">
           <button
             onClick={() => handleTabChangeKategori("All")}
@@ -77,7 +71,6 @@ const Navbar = ({ categories, activeTab, setActiveTab }) => {
         </li>
       </ul>
 
-      {/* Indikator konten sedang berganti */}
       {animating && (
         <div className="w-full h-1 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-gray-300 to-transparent animate-pulse"></div>

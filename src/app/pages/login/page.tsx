@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { signIn } from "next-auth/react";
-
+import { useAuth } from "../../../context/AuthContext";
 // Dynamically import the Player component with no SSR
 const Player = dynamic(
   () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
@@ -18,7 +18,7 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-
+  const { login } = useAuth();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -34,6 +34,7 @@ export default function LoginForm() {
         setError(result!.error);
         setIsLoading(false);
       } else {
+        login(result);
         router.push("/pages");
         router.refresh(); // Refresh the page to update session data
       }

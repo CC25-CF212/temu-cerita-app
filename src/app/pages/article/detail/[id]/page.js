@@ -1,23 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  MessageCircle,
-  Heart,
-  Share2,
-  Bookmark,
-  ChevronLeft,
-} from "lucide-react";
-import Header from "../../../../../components/pages/components/Header";
-import Footer from "../../../../../components/pages/components/Footer";
-import InteractionBar from "@/components/pages/components/InteractionBar";
+import Header from "../../../../../components/pages/components/layout/Header";
+import Footer from "../../../../../components/pages/components/layout/Footer";
 import SidebarArticle from "@/components/pages/components/SidebarArticle";
 import CommentSection from "@/components/pages/components/CommentSection";
 import InteractiveGallery from "@/components/pages/components/InteractiveGallery";
 import { galleryItems } from "@/data/galleryItems";
 export default function ArticleDetail() {
   const [isMounted, setIsMounted] = useState(false);
-
-  // Safe way to handle client-side rendering of images
   useEffect(() => {
     setIsMounted(true);
   }, []);

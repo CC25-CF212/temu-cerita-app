@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
-import Footer from "@/components/pages/components/Footer";
-import Header from "@/components/pages/components/Header";
+import Footer from "@/components/pages/components/layout/Footer";
+import Header from "@/components/pages/components/layout/Header";
 import { EditorContent, useEditor, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";

@@ -1,6 +1,6 @@
 "use client";
 
-import { Article } from "@/types";
+import { Article } from "@/models";
 import { useState } from "react";
 
 interface ArticleTableProps {

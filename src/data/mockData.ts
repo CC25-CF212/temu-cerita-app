@@ -1,4 +1,4 @@
-import { Article, Category } from "@/types";
+import { Article, Category } from "@/models";
 
 export const mockArticles: Article[] = [
   {

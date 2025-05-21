@@ -1,21 +1,23 @@
 "use client";
 import Head from "next/head";
 import { useState } from "react";
-import Header from "../../../components/pages/components/Header";
-import Footer from "../../../components/pages/components/Footer";
+import Header from "../../../components/pages/components/layout/Header";
+import Footer from "../../../components/pages/components/layout/Footer";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 
 // Profile Sidebar Component
-const ProfileSidebar = () => {
+const ProfileSidebar = ({ dataUser }) => {
   return (
     <div className="flex flex-col items-center p-6 bg-white rounded-lg shadow-sm">
       <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200">
         <img
-          src="/images/robil.jpeg"
+          src={dataUser?.user?.image}
           alt="Profile"
           className="w-full h-full object-cover"
         />
       </div>
-      <h2 className="mt-4 text-lg font-medium">Robil Dev</h2>
+      <h2 className="mt-4 text-lg font-medium">{dataUser?.user?.name}</h2>
       <button className="mt-2 px-4 py-1 text-green-600 text-sm border border-green-600 rounded-full hover:bg-green-50 transition-colors">
         Edit Profile
       </button>
@@ -204,7 +206,16 @@ const MainContent = ({ activeTab }) => {
 // Main App Component
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("home");
-
+  const { data: session, status } = useSession();
+  // Handle klik di luar area notifikasi untuk menutup panel
+  useEffect(() => {
+    if (status === "authenticated") {
+      console.log("User session loaded:");
+      console.log("Name:", session?.user?.name);
+      console.log("Email:", session?.user?.email);
+      console.log("Image URL:", session?.user?.image);
+    }
+  }, [session, status]);
   return (
     <div className="min-h-screen bg-gray-50">
       <Head>
@@ -222,7 +233,7 @@ const Profile = () => {
         <div className="flex flex-col md:flex-row gap-8">
           {/* Left Column - Profile */}
           <div className="w-full md:w-1/4 sticky top-24 self-start">
-            <ProfileSidebar />
+            <ProfileSidebar dataUser={session} />
           </div>
 
           {/* Right Column - Articles */}

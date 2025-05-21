@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Bar } from 'react-chartjs-2';
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,8 +10,8 @@ import {
   Tooltip,
   Legend,
   ChartOptions,
-} from 'chart.js';
-import { Category } from '@/types';
+} from "chart.js";
+import { Category } from "@/models";
 
 ChartJS.register(
   CategoryScale,
@@ -27,11 +27,11 @@ interface CategoryChartProps {
 }
 
 export default function CategoryChart({ categories }: CategoryChartProps) {
-  const options: ChartOptions<'bar'> = {
+  const options: ChartOptions<"bar"> = {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: "top" as const,
       },
       title: {
         display: false,
@@ -47,17 +47,17 @@ export default function CategoryChart({ categories }: CategoryChartProps) {
   };
 
   const data = {
-    labels: categories.map(cat => cat.name),
+    labels: categories.map((cat) => cat.name),
     datasets: [
       {
-        label: 'Current',
-        data: categories.map(cat => cat.current),
-        backgroundColor: 'rgba(75, 192, 192, 0.8)',
+        label: "Current",
+        data: categories.map((cat) => cat.current),
+        backgroundColor: "rgba(75, 192, 192, 0.8)",
       },
       {
-        label: 'Previous',
-        data: categories.map(cat => cat.previous),
-        backgroundColor: 'rgba(173, 216, 230, 0.8)',
+        label: "Previous",
+        data: categories.map((cat) => cat.previous),
+        backgroundColor: "rgba(173, 216, 230, 0.8)",
       },
     ],
   };

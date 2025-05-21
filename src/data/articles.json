@@ -1,0 +1,107 @@
+{
+    "categories": [
+        "Technology",
+        "Travel",
+        "Culture",
+        "Food",
+        "Lifestyle"
+    ],
+    "articles": [
+        {
+            "id": "featured1",
+            "category": "Technology",
+            "title": "Build an asasas Workflow for your BigQuery data using LangGraph and Gemini",
+            "description": "Learn how to create powerful data workflows combining BigQuery, LangGraph, and Google's Gemini AI",
+            "author": "Ananda",
+            "authorInitial": "A",
+            "years": 3,
+            "likes": 45,
+            "comments": 5,
+            "image": "/images/featured-article.jpg"
+        },
+        {
+            "id": 2,
+            "category": "Technology",
+            "title": "Building Real-time Analytics with Google Cloud",
+            "description": "How to set up a scalable real-time analytics pipeline",
+            "author": "Ananda",
+            "authorInitial": "A",
+            "years": 3,
+            "likes": 45,
+            "comments": 5,
+            "image": "/images/featured-article.jpg"
+        },
+        {
+            "id": 3,
+            "category": "Travel",
+            "title": "Hidden Beaches of Southeast Asia",
+            "description": "Discover the untouched paradise beaches away from tourists",
+            "author": "Ananda",
+            "authorInitial": "A",
+            "years": 3,
+            "likes": 45,
+            "comments": 5,
+            "image": "/images/featured-article.jpg"
+        },
+        {
+            "id": 4,
+            "category": "Travel",
+            "title": "Backpacking Through Europe on a Budget",
+            "description": "How to experience Europe without breaking the bank",
+            "author": "Ananda",
+            "authorInitial": "A",
+            "years": 3,
+            "likes": 45,
+            "comments": 5,
+            "image": "/images/featured-article.jpg"
+        },
+        {
+            "id": 5,
+            "category": "Culture",
+            "title": "The Annual Flower Festival in Bali",
+            "description": "Experience the colors and traditions of Bali's biggest celebration",
+            "author": "Ananda",
+            "authorInitial": "A",
+            "years": 3,
+            "likes": 45,
+            "comments": 5,
+            "image": "/images/featured-article.jpg"
+        },
+        {
+            "id": 6,
+            "category": "Food",
+            "title": "Street Food Tour of Jakarta",
+            "description": "A culinary adventure through Indonesia's vibrant capital",
+            "author": "Ananda",
+            "authorInitial": "A",
+            "years": 3,
+            "likes": 45,
+            "comments": 5,
+            "image": "/images/featured-article.jpg"
+        },
+        {
+            "id": 7,
+            "category": "Lifestyle",
+            "title": "Minimalist Living in Urban Spaces",
+            "description": "How to embrace minimalism in city apartments",
+            "author": "Ananda",
+            "authorInitial": "A",
+            "years": 3,
+            "likes": 45,
+            "comments": 5,
+            "image": "/images/featured-article.jpg"
+        },
+        {
+            "id": 8,
+            "category": "Culture",
+            "title": "Traditional Crafts of West Java",
+            "description": "Exploring the artisanal heritage of Indonesia's cultural heartland",
+            "author": "Ananda",
+            "authorInitial": "A",
+            "years": 3,
+            "likes": 45,
+            "comments": 5,
+            "image": "/images/featured-article.jpg"
+        }
+    ]
+}

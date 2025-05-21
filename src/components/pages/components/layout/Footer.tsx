@@ -1,7 +1,6 @@
 import { teamMembers } from "@/data/mockData";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import ChatBox from "./ChatBox";
 const Footer: React.FC = () => {
   const [focusedImage, setFocusedImage] = useState<string | null>(null);
 
@@ -14,11 +13,6 @@ const Footer: React.FC = () => {
             <p className="text-sm text-gray-600 mb-4">
               Discover and share stories that matter.
             </p>
-            {/* <div className="flex space-x-4">
-              <div className="h-8 w-8 rounded-full bg-gray-300" />
-              <div className="h-8 w-8 rounded-full bg-gray-300" />
-              <div className="h-8 w-8 rounded-full bg-gray-300" />
-            </div> */}
             <div className="flex space-x-4">
               {teamMembers.map((member) => (
                 <img
@@ -30,7 +24,6 @@ const Footer: React.FC = () => {
                 />
               ))}
             </div>
-            {/* Focused image modal */}
             <AnimatePresence>
               {focusedImage && (
                 <motion.div
@@ -55,40 +48,12 @@ const Footer: React.FC = () => {
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.8, opacity: 0 }}
-                    onClick={(e) => e.stopPropagation()} // Supaya gambar tidak close saat diklik
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-          {/* <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="font-medium mb-3">Categories</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>Technology</li>
-                <li>Google Cloud</li>
-                <li>Data Science</li>
-                <li>Web Development</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium mb-3">Company</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>About</li>
-                <li>Careers</li>
-                <li>Contact</li>
-                <li>FAQ</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium mb-3">Legal</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>Terms of Service</li>
-                <li>Privacy Policy</li>
-                <li>Cookie Policy</li>
-              </ul>
-            </div>
-          </div> */}
         </div>
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-sm text-gray-500 text-center">

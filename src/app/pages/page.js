@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
 import Head from "next/head";
-import Header from "../../components/pages/components/Header";
-import Footer from "../../components/pages/components/Footer";
-import Navbar from "../../components/pages/components/Navbar";
+import Header from "../../components/pages/components/layout/Header";
+import Footer from "../../components/pages/components/layout/Footer";
+import Navbar from "../../components/pages/components/layout/Navbar";
 import ArticleCard from "../../components/pages/components/ArticleCard";
 import SidePanel from "../../components/pages/components/SidePanel";
 import { AuthCheck } from "../../components/auth-check";

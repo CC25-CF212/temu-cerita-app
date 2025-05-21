@@ -7,16 +7,14 @@ const Header = () => {
   const router = useRouter();
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
-  const [darkMode, setDarkMode] = useState(false); // Set default ke dark mode
+  const [darkMode, setDarkMode] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const notificationRef = useRef(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const logoutRef = useRef(null);
 
-  // Handle klik di luar area notifikasi untuk menutup panel
   useEffect(() => {
-    console.log(session);
     function handleClickOutside(event) {
       if (
         notificationRef.current &&
@@ -32,17 +30,16 @@ const Header = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [notificationRef, logoutRef]);
+  }, [notificationRef, logoutRef, session]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
-    // Di sini Anda bisa menambahkan logika untuk mengubah tema di seluruh aplikasi
   };
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
     if (!showNotifications) {
-      setNotificationCount(0); // Reset notifikasi saat dibuka
+      setNotificationCount(0);
     }
   };
   const toggleLogoutConfirm = () => {
@@ -58,14 +55,13 @@ const Header = () => {
 
       // Redirect to login page
       router.push("/pages/login");
-      router.refresh(); // For app router, refresh is important to update UI
+      router.refresh();
     } catch (error) {
       console.error("Logout error:", error);
     }
   };
   return (
     <>
-      {/* Header yang fixed di atas */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 border-b ${
           darkMode
@@ -109,7 +105,6 @@ const Header = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Tema (Light/Dark Mode) */}
             <button
               onClick={toggleDarkMode}
               className={`p-2 rounded-full ${
@@ -243,17 +238,24 @@ const Header = () => {
 
             <Link href="/pages/profile">
               <div
-                className={`w-10 h-10 rounded-full ${
+                className={`w-8 h-8 rounded-full ${
                   darkMode ? "bg-gray-700" : "bg-gray-200"
-                } flex items-center justify-center`}
+                } overflow-hidden cursor-pointer flex items-center justify-center`}
               >
-                <User
-                  size={20}
-                  className={darkMode ? "text-gray-300" : "text-gray-600"}
-                />
+                {session?.user?.image ? (
+                  <img
+                    src={session.user.image}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User
+                    size={20}
+                    className={darkMode ? "text-gray-300" : "text-gray-600"}
+                  />
+                )}
               </div>
             </Link>
-            {/* Tombol Logout */}
             <div className="relative" ref={logoutRef}>
               <button
                 onClick={toggleLogoutConfirm}
@@ -264,8 +266,6 @@ const Header = () => {
               >
                 <LogOut size={20} />
               </button>
-
-              {/* Konfirmasi Logout */}
               {showLogoutConfirm && (
                 <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg z-50 overflow-hidden">
                   <div
@@ -304,8 +304,6 @@ const Header = () => {
           </div>
         </div>
       </header>
-
-      {/* Spacer untuk menghindari konten tertutup header */}
       <div className="h-20"></div>
     </>
   );
