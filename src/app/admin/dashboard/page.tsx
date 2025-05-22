@@ -4,45 +4,34 @@ import UserCard from "@/components/admin/Dashboard/UserCard";
 import SideMenu from "@/components/SideMenu";
 import { mockCategories, yearlyArticles } from "@/data/mockData";
 import dynamic from "next/dynamic";
-import { useEffect } from "react";
-import { createRoot } from "react-dom/client";
-// Dynamically import Chart components to avoid SSR issues with chart.js
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
 const CategoryChart = dynamic(
-  () => import("../../../components/admin/Dashboard/CategoryChart"),
+  () => import("@/components/admin/Dashboard/CategoryChart"),
   { ssr: false }
 );
 
 const ArticleChart = dynamic(
-  () => import("../../../components/admin/Dashboard/ArticleChart"),
+  () => import("@/components/admin/Dashboard/ArticleChart"),
   { ssr: false }
 );
 
 export default function DashboardPage() {
+  const [sideMenuContainer, setSideMenuContainer] =
+    useState<HTMLElement | null>(null);
+
   useEffect(() => {
-    // Using createRoot instead of ReactDOM.render which is deprecated
-    const sideMenuContainer = document.getElementById("sidemenu-container");
-
-    if (sideMenuContainer) {
-      // Clear any existing content
-      sideMenuContainer.innerHTML = "";
-
-      // Create a root element
-      const rootElement = document.createElement("div");
-      sideMenuContainer.appendChild(rootElement);
-
-      // Use createRoot API for React 18+
-      const root = createRoot(rootElement);
-      root.render(<SideMenu />);
-
-      // Cleanup function to unmount when component unmounts
-      return () => {
-        root.unmount();
-      };
-    }
+    // Find the container after component mounts
+    const container = document.getElementById("sidemenu-container");
+    setSideMenuContainer(container);
   }, []);
 
   return (
     <div>
+      {/* Use React Portal to render SideMenu in the external container */}
+      {sideMenuContainer && createPortal(<SideMenu />, sideMenuContainer)}
+
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

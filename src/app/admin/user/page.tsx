@@ -3,6 +3,7 @@
 import SideMenu from "@/components/SideMenu";
 import { mockUsers } from "@/data/mockData";
 import { useState, useEffect, SetStateAction } from "react";
+import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 
 export default function UserPage() {
@@ -11,13 +12,13 @@ export default function UserPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 10;
 
-  // Render SideMenu hanya di client
+  const [sideMenuContainer, setSideMenuContainer] =
+    useState<HTMLElement | null>(null);
+
   useEffect(() => {
+    // Find the container after component mounts
     const container = document.getElementById("sidemenu-container");
-    if (container && container.childNodes.length === 0) {
-      const root = createRoot(container);
-      root.render(<SideMenu />);
-    }
+    setSideMenuContainer(container);
   }, []);
 
   const filteredUsers = users.filter((user) =>
@@ -35,6 +36,8 @@ export default function UserPage() {
 
   return (
     <>
+      {/* Use React Portal to render SideMenu in the external container */}
+      {sideMenuContainer && createPortal(<SideMenu />, sideMenuContainer)}
       <div className="flex justify-between mb-4">
         <h1 className="text-2xl font-bold mb-6">User</h1>
         <div className="flex items-center">

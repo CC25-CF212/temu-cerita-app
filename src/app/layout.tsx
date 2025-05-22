@@ -1,13 +1,12 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import AppLayout from "./AppLayout"; // komponen client
-import { AuthProvider } from "../providers/auth-provider";
+import { AuthProvider } from "@/providers/auth-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Temu Cerita",
-  description: "Admin dashboard for TemuCerita",
+  description: "",
 };
 
 export default function RootLayout({
@@ -18,9 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-          <AppLayout>{children}</AppLayout>
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

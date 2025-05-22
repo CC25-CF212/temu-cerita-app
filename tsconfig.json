@@ -32,14 +32,9 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/*.jsx",
+    "**/*.js",
     ".next/types/**/*.ts",
-    "src/app/pages/article/detail/[id]/page.js",
-    "src/app/pages/article/post/page.bck",
-    "src/app/admin/article/post/page.js",
-    "src/components/admin/Article/post/EditorToolbar.js",
-    "src/providers/auth-provider.js",
-    "src/components/pages/components/layout/Navbar.js",
-    "src/components/pages/components/layout/Header.js"
   ],
   "exclude": [
     "node_modules"

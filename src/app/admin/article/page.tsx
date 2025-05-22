@@ -3,20 +3,24 @@
 import ArticleTable from "@/components/admin/Article/ArticleTable";
 import SideMenu from "@/components/SideMenu";
 import { mockArticles } from "@/data/mockData";
-import { useEffect } from "react";
-import { createRoot } from "react-dom/client";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function ArticlePage() {
-  // Render SideMenu hanya di client
+  const [sideMenuContainer, setSideMenuContainer] =
+    useState<HTMLElement | null>(null);
+
   useEffect(() => {
+    // Find the container after component mounts
     const container = document.getElementById("sidemenu-container");
-    if (container && container.childNodes.length === 0) {
-      const root = createRoot(container);
-      root.render(<SideMenu />);
-    }
+    setSideMenuContainer(container);
   }, []);
+
   return (
     <div>
+      {/* Use React Portal to render SideMenu in the external container */}
+      {sideMenuContainer && createPortal(<SideMenu />, sideMenuContainer)}
+
       <h1 className="text-2xl font-bold mb-6">Article</h1>
       <ArticleTable articles={mockArticles} />
     </div>

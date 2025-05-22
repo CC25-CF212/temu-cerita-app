@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 // import { useAuth } from "../../../../context/AuthContext";
 import { fetchArticles, fetchCategories } from "../../../../utils/articles";
+import ImageGallery from "@/components/images/ImageGallery";
 
 // Category Tag Component
 const CategoryTag = ({ text, active, onClick }) => {
@@ -19,15 +20,61 @@ const CategoryTag = ({ text, active, onClick }) => {
     </button>
   );
 };
-
+// Nature images
+const natureImages = [
+  {
+    src: "/images/gambar.png",
+    alt: "Mountain landscape",
+    caption: "Mountain range at sunset",
+  },
+  {
+    src: "/images/gambar.png",
+    alt: "Ocean beach",
+    caption: "Sandy beach with waves",
+  },
+  {
+    src: "/images/gambar.png",
+    alt: "Dense forest",
+    caption: "Ancient forest with tall trees",
+  },
+  {
+    src: "/images/gambar.png",
+    alt: "Desert landscape",
+    caption: "Sand dunes at dawn",
+  },
+];
 // Featured Article Component
 const FeaturedArticle = ({ article }) => {
+  // Nature images
+  const natureImages = [
+    {
+      src: "/images/gambar.png",
+      alt: "Mountain landscape",
+      caption: "Mountain range at sunset",
+    },
+    {
+      src: "/images/robil.jpeg",
+      alt: "Ocean beach",
+      caption: "Sandy beach with waves",
+    },
+    {
+      src: "/images/teo.jpg",
+      alt: "Dense forest",
+      caption: "Ancient forest with tall trees",
+    },
+    {
+      src: "/images/Apipah.jpg",
+      alt: "Desert landscape",
+      caption: "Sand dunes at dawn",
+    },
+  ];
   if (!article) return null;
 
   return (
     <div className="mb-12">
-      <div className="w-full h-80 rounded-lg bg-gray-200 mb-6">
+      <div className="w-full h-120 rounded-lg bg-gray-200 mb-6">
         {/* Placeholder for article image */}
+        <ImageGallery images={natureImages.slice(0, 3)} />
       </div>
       <div className="flex items-center mb-3">
         <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center text-white mr-2">

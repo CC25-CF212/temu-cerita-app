@@ -10,6 +10,7 @@ import SideMenu from "@/components/SideMenu";
 import FormInput from "@/components/FormInput";
 import EditorToolbar from "@/components/admin/Article/post/EditorToolbar";
 import MediaGallery from "@/components/admin/Article/post/MediaGallery";
+import { createPortal } from "react-dom";
 // Action Buttons Component
 const ActionButtons = () => {
   const handleSaveDraft = () => {
@@ -221,17 +222,20 @@ const StoryEditor = () => {
   );
 };
 export default function ArticlePostPage() {
+  const [sideMenuContainer, setSideMenuContainer] = useState(null);
+
   useEffect(() => {
     const container = document.getElementById("sidemenu-container");
-    if (container && container.childNodes.length === 0) {
-      const root = createRoot(container);
-      root.render(<SideMenu />);
-    }
+    setSideMenuContainer(container);
   }, []);
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
-      <StoryEditor />
-    </div>
+    <>
+      {sideMenuContainer && createPortal(<SideMenu />, sideMenuContainer)}
+
+      <div className="bg-white p-4 rounded-lg shadow">
+        <StoryEditor />
+      </div>
+    </>
   );
 }

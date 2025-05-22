@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { User } from "lucide-react";
+import ImageGridGallery from "@/components/images/ImageGridGallery";
+import ImageGallery from "@/components/images/ImageGallery";
 
 const SidePanel = ({ activeTab }) => {
   // Data untuk cultural highlights berdasarkan tab aktif
