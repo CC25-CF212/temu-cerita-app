@@ -3,16 +3,51 @@ import { AuthProvider } from "@/context/AuthContext";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
+// Definisi interface untuk data cuaca
+interface WeatherData {
+  locationName: string;
+  main: {
+    temp: number;
+    feels_like: number;
+    humidity: number;
+    pressure: number;
+  };
+  weather: Array<{
+    description: string;
+    icon: string;
+  }>;
+  visibility: number;
+  wind: {
+    speed: number;
+  };
+}
+
+// Interface untuk koordinat lokasi
+interface LocationCoords {
+  latitude: number;
+  longitude: number;
+}
+
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
+  // States untuk cuaca
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [location, setLocation] = useState<LocationCoords | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // API Key - dalam production, simpan di environment variables
+  const API_KEY = "512d04bd91e18517e3ff3492a1e1f653";
+
   // Prevent hydration mismatch by only showing time on client
   useEffect(() => {
     setIsClient(true);
+    // Auto get weather on component mount
+    handleGetWeather();
   }, []);
 
   // Update time every second
@@ -81,6 +116,139 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     setShowProfileMenu(!showProfileMenu);
   };
 
+  // Fungsi untuk mendapatkan lokasi user
+  const getCurrentLocation = (): Promise<LocationCoords> => {
+    return new Promise((resolve, reject) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            });
+          },
+          (error) => reject(error),
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        reject(new Error("Geolocation not supported"));
+      }
+    });
+  };
+
+  // Fungsi untuk fetch data cuaca
+  const fetchWeatherData = async (lat: number, lon: number) => {
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=id`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch weather data");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Fungsi untuk mendapatkan nama lokasi dari koordinat
+  const getLocationName = async (lat: number, lon: number): Promise<string> => {
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${API_KEY}`
+      );
+      const data = await response.json();
+      return data[0]?.name || "Unknown Location";
+    } catch (error) {
+      return "Unknown Location";
+    }
+  };
+
+  // Handler untuk mendapatkan cuaca berdasarkan lokasi
+  const handleGetWeather = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Dapatkan lokasi user
+      const coords = await getCurrentLocation();
+      setLocation(coords);
+
+      // Dapatkan data cuaca
+      const weatherData = await fetchWeatherData(
+        coords.latitude,
+        coords.longitude
+      );
+
+      // Dapatkan nama lokasi
+      const locationName = await getLocationName(
+        coords.latitude,
+        coords.longitude
+      );
+
+      setWeather({
+        ...weatherData,
+        locationName,
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to get weather data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to display weather info
+  const renderWeatherInfo = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center space-x-1">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+          <span className="text-sm">Loading...</span>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div
+          className="flex items-center space-x-1 cursor-pointer"
+          onClick={handleGetWeather}
+        >
+          <span>❌</span>
+          <span className="text-sm hidden md:inline">Retry</span>
+        </div>
+      );
+    }
+
+    if (weather) {
+      return (
+        <div
+          className="flex items-center space-x-1 cursor-pointer"
+          onClick={handleGetWeather}
+          title={`${weather.locationName} - ${weather.weather[0].description}`}
+        >
+          <span>🌤</span>
+          <span className="text-sm hidden md:inline">
+            {Math.round(weather.main.temp)}°C
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className="flex items-center space-x-1 cursor-pointer"
+        onClick={handleGetWeather}
+      >
+        <span>🌤</span>
+        <span className="text-sm hidden md:inline">--°C</span>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-emerald-50">
       <header className="bg-emerald-100 py-4 px-6 sticky top-0 z-50 shadow-md flex items-center justify-between">
@@ -112,10 +280,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
 
           {/* Cuaca */}
-          <div className="flex items-center space-x-1">
-            <span>🌤</span>
-            <span className="text-sm hidden md:inline">28°C</span>
-          </div>
+          {renderWeatherInfo()}
 
           {/* Notifikasi dengan dropdown */}
           <div className="relative">
@@ -293,7 +458,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <div className="w-full md:w-64 bg-emerald-700">
           <div className="md:fixed md:h-screen md:w-64">
             <div className="h-full">
-              {/* SideMenu will be rendered client-side */}
               <div id="sidemenu-container" className="h-full" />
             </div>
           </div>
