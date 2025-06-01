@@ -5,6 +5,7 @@ import Header from "../../../components/pages/components/layout/Header";
 import Footer from "../../../components/pages/components/layout/Footer";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
+import { AuthCheck } from "@/components/auth-check";
 
 // Profile Sidebar Component
 const ProfileSidebar = ({ dataUser }) => {
@@ -37,7 +38,7 @@ const NavigationTabs = ({ activeTab, setActiveTab }) => {
             : ""
         }`}
       >
-        Home
+        Saved
       </button>
       <button
         onClick={() => setActiveTab("like")}
@@ -217,35 +218,40 @@ const Profile = () => {
     }
   }, [session, status]);
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Head>
-        <title>TemuCerita - Profile</title>
-        <meta
-          name="description"
-          content="Discover stories and articles on TemuCerita"
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <AuthCheck>
+      <div className="min-h-screen bg-gray-50">
+        <Head>
+          <title>TemuCerita - Profile</title>
+          <meta
+            name="description"
+            content="Discover stories and articles on TemuCerita"
+          />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
 
-      <Header />
+        <Header />
 
-      <main className="max-w-screen-xl mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Left Column - Profile */}
-          <div className="w-full md:w-1/4 sticky top-24 self-start">
-            <ProfileSidebar dataUser={session} />
+        <main className="max-w-screen-xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Left Column - Profile */}
+            <div className="w-full md:w-1/4 sticky top-24 self-start">
+              <ProfileSidebar dataUser={session} />
+            </div>
+
+            {/* Right Column - Articles */}
+            <div className="w-full md:w-3/4 bg-white rounded-lg shadow-sm p-6">
+              <NavigationTabs
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+              />
+              <MainContent activeTab={activeTab} />
+            </div>
           </div>
+        </main>
 
-          {/* Right Column - Articles */}
-          <div className="w-full md:w-3/4 bg-white rounded-lg shadow-sm p-6">
-            <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-            <MainContent activeTab={activeTab} />
-          </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </AuthCheck>
   );
 };
 

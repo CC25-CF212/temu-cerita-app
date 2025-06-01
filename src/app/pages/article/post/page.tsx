@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Footer from "@/components/pages/components/layout/Footer";
 import Header from "@/components/pages/components/layout/Header";
 import { EditorContent, useEditor, Editor } from "@tiptap/react";
@@ -8,6 +8,12 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Head from "next/head";
+import Select from "react-select";
+// Load ClientSelect tanpa SSR
+const ClientSelect = dynamic(() => import("@/components/ClientSelect"), {
+  ssr: false,
+});
+
 import {
   Bold,
   Italic,
@@ -24,7 +30,11 @@ import {
   Film,
   Paperclip,
   X,
+  Loader2,
+  ChevronDown,
 } from "lucide-react";
+import dynamic from "next/dynamic";
+import { AuthCheck } from "@/components/auth-check";
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -32,7 +42,7 @@ interface EditorToolbarProps {
   onVideoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-// Editor toolbar component
+// Editor toolbar component (sama seperti sebelumnya)
 const EditorToolbar: React.FC<EditorToolbarProps> = ({
   editor,
   onImageUpload,
@@ -49,15 +59,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   const addLink = () => {
     if (linkUrl) {
-      // Update link
       editor
         .chain()
         .focus()
         .extendMarkRange("link")
         .setLink({ href: linkUrl })
         .run();
-
-      // Reset and close
       setLinkUrl("https://");
       setShowLinkMenu(false);
     }
@@ -209,7 +216,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       </div>
 
       {/* Video upload button */}
-      <div>
+      <div hidden>
         <input
           type="file"
           ref={videoInputRef}
@@ -253,12 +260,58 @@ interface MediaItem {
   file: File;
   url: string;
 }
-
+interface LocationResult {
+  negara: string;
+  provinsi: string;
+  kabkota: string;
+  kecamatan: string;
+  desakel: string;
+  kodepos: string;
+}
 export default function EditorPage() {
   const [title, setTitle] = useState<string>("");
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [currentSlide, setCurrentSlide] = useState<number>(0);
+  const [province, setProvince] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [kategoriList, setKategoriList] = useState<Kategori[]>([]);
+  const [category, setCategory] = useState<string>("");
+  const [active, setActive] = useState<boolean>(true);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string>("");
+  const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
+  const [kodepos, setKodepos] = useState<string>("");
+  const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
+  const [locationError, setLocationError] = useState<string>("");
+  const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [selectedLocation, setSelectedLocation] =
+    useState<LocationResult | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    }
+    const fetchKategori = async () => {
+      const res = await fetch("/api/kategori");
+      if (res.ok) {
+        const data = await res.json();
+        setKategoriList(data);
+      }
+    };
+    fetchKategori();
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -269,6 +322,8 @@ export default function EditorPage() {
       Link,
     ],
     content: "",
+    // Fix SSR hydration mismatch
+    immediatelyRender: false,
   });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -283,7 +338,6 @@ export default function EditorPage() {
 
       setMediaItems([...mediaItems, ...newMediaItems]);
 
-      // Insert first image at cursor position if there are no images yet
       if (mediaItems.length === 0 && editor && newMediaItems.length > 0) {
         editor.chain().focus().setImage({ src: newMediaItems[0].url }).run();
       }
@@ -301,9 +355,6 @@ export default function EditorPage() {
       };
 
       setMediaItems([...mediaItems, newVideo]);
-
-      // We don't auto-insert video to the editor as it might be disruptive
-      // User can manually place it with the media gallery
     }
   };
 
@@ -320,254 +371,549 @@ export default function EditorPage() {
     if (item.type === "image") {
       editor.chain().focus().setImage({ src: item.url }).run();
     } else {
-      // Insert video as HTML
       const videoHtml = `<div class="video-wrapper"><video controls><source src="${item.url}" type="${item.file.type}"></video></div>`;
       editor.commands.insertContent(videoHtml);
     }
   };
 
+  // Fungsi untuk submit artikel
+  const handleSubmit = async (isDraft: boolean = false) => {
+    if (!editor || !title.trim()) {
+      setSubmitError("Judul artikel harus diisi");
+      return;
+    }
+
+    const content = editor.getHTML();
+    if (!content.trim() || content === "<p></p>") {
+      setSubmitError("Konten artikel harus diisi");
+      return;
+    }
+
+    if (!category.trim()) {
+      setSubmitError("Kategori harus dipilih");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError("");
+    setSubmitSuccess(false);
+
+    try {
+      const formData = new FormData();
+
+      // Tambahkan field teks
+      formData.append("title", title);
+      formData.append("content_html", content);
+      formData.append("province", province);
+      formData.append("city", city);
+      formData.append("category", category);
+      formData.append("active", isDraft ? "false" : active.toString());
+
+      // Tambahkan file gambar/video
+      mediaItems.forEach((item) => {
+        formData.append("images", item.file);
+      });
+
+      const response = await fetch("/api/article", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Gagal submit artikel");
+      }
+
+      setSubmitSuccess(true);
+
+      // Reset form jika sukses
+      if (!isDraft) {
+        setTitle("");
+        setProvince("");
+        setCity("");
+        setCategory("");
+        setMediaItems([]);
+        setCurrentSlide(0);
+        editor.commands.clearContent();
+      }
+
+      console.log("Artikel berhasil disubmit:", result);
+    } catch (error) {
+      console.error("Error submitting article:", error);
+      setSubmitError(
+        error instanceof Error ? error.message : "Terjadi kesalahan"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  // Fungsi untuk mencari lokasi berdasarkan kode pos
+  const searchLocation = async (query: string) => {
+    if (!query || query.length < 3) {
+      setLocationResults([]);
+      setLocationError("");
+      return;
+    }
+
+    setIsLoadingLocation(true);
+    setLocationError("");
+
+    try {
+      const response = await fetch(
+        `https://alamat.thecloudalert.com/api/cari/index/?keyword=${query}`
+      );
+      const data = await response.json();
+
+      if (data.status === 200 && data.result && data.result.length > 0) {
+        setLocationResults(data.result);
+        setLocationError("");
+        setShowDropdown(true);
+      } else {
+        setLocationResults([]);
+        setLocationError("Lokasi tidak ditemukan");
+        setShowDropdown(false);
+      }
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      setLocationError("Gagal mencari lokasi");
+      setLocationResults([]);
+      setShowDropdown(false);
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  // Handler untuk perubahan input pencarian
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setSelectedLocation(null);
+    setKodepos("");
+    setProvince("");
+    setCity("");
+
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      searchLocation(value);
+    }, 500);
+
+    // Clear previous timeout
+    return () => clearTimeout(timeoutId);
+  };
+  // Handler untuk memilih lokasi dari dropdown
+  const handleLocationSelect = (location: LocationResult) => {
+    setSelectedLocation(location);
+    setKodepos(location.kodepos);
+    setProvince(location.provinsi);
+    setCity(location.kabkota);
+    setSearchQuery(
+      `${location.kodepos} - ${location.desakel}, ${location.kecamatan}, ${location.kabkota}, ${location.provinsi}`
+    );
+    setShowDropdown(false);
+    setLocationResults([]);
+  };
+  type Kategori = {
+    id: string;
+    nama: string;
+  };
+  // Konversi data dari API (kategoriList) ke format react-select:
+  const options = kategoriList.map((item) => ({
+    value: item.id,
+    label: item.nama,
+  }));
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Head>
-        <title>
-          {title ? `${title} - TemuCerita` : "Create Story - TemuCerita"}
-        </title>
-        <meta
-          name="description"
-          content={`Create and share your stories on TemuCerita`}
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <Header />
-
-      <main className="flex-grow container mx-auto py-8 px-4">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">Create New Story</h1>
-
-          <div className="mb-4">
-            <input
-              type="text"
-              value={title}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setTitle(e.target.value)
-              }
-              placeholder="Enter story title..."
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl"
+    <>
+      <AuthCheck>
+        <div className="min-h-screen flex flex-col bg-gray-50">
+          <Head>
+            <title>
+              {title ? `${title} - TemuCerita` : "Create Story - TemuCerita"}
+            </title>
+            <meta
+              name="description"
+              content={`Create and share your stories on TemuCerita`}
             />
-          </div>
+            <link rel="icon" href="/favicon.ico" />
+          </Head>
 
-          {/* Media Gallery / Slider */}
-          {mediaItems.length > 0 && (
-            <div className="mb-6 border border-gray-300 rounded-lg bg-white overflow-hidden">
-              <div className="relative">
-                {/* Current slide */}
-                <div className="slider-content h-64 flex items-center justify-center bg-gray-100">
-                  {mediaItems[currentSlide].type === "image" ? (
-                    <img
-                      src={mediaItems[currentSlide].url}
-                      alt="Uploaded content"
-                      className="max-h-64 max-w-full object-contain"
+          <Header />
+
+          <main className="flex-grow container mx-auto py-8 px-4">
+            <div className="max-w-3xl mx-auto">
+              <h1 className="text-2xl font-bold mb-6">Create New Story</h1>
+
+              {/* Form fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kategori *
+                  </label>
+                  <ClientSelect
+                    options={kategoriList.map((item) => ({
+                      value: item.id,
+                      label: item.nama,
+                    }))}
+                    value={category}
+                    onChange={setCategory}
+                  />
+                </div>
+                {/* Dropdown Pencarian Lokasi */}
+                <div className="relative" ref={dropdownRef}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cari Lokasi (Kode Pos/Kelurahan/Kecamatan)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      onFocus={() =>
+                        locationResults.length > 0 && setShowDropdown(true)
+                      }
+                      placeholder="Ketik kode pos, kelurahan, atau kecamatan..."
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                  ) : (
-                    <video
-                      src={mediaItems[currentSlide].url}
-                      controls
-                      className="max-h-64 max-w-full"
-                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center">
+                      {isLoadingLocation ? (
+                        <Loader2
+                          size={16}
+                          className="animate-spin text-blue-500"
+                        />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-400" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Dropdown Results */}
+                  {showDropdown && locationResults.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {locationResults.map((location, index) => (
+                        <div
+                          key={`${location.kodepos}-${index}`}
+                          onClick={() => handleLocationSelect(location)}
+                          className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium text-sm text-gray-900">
+                            {location.kodepos} - {location.desakel}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {location.kecamatan}, {location.kabkota},{" "}
+                            {location.provinsi}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {locationError && (
+                    <p className="mt-1 text-sm text-red-600">{locationError}</p>
                   )}
                 </div>
 
-                {/* Navigation arrows */}
-                {mediaItems.length > 1 && (
-                  <>
-                    <button
-                      onClick={() =>
-                        setCurrentSlide((prev) =>
-                          prev === 0 ? mediaItems.length - 1 : prev - 1
-                        )
-                      }
-                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-1 rounded-full shadow-md hover:bg-gray-100"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() =>
-                        setCurrentSlide((prev) =>
-                          prev === mediaItems.length - 1 ? 0 : prev + 1
-                        )
-                      }
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white p-1 rounded-full shadow-md hover:bg-gray-100"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
-                  </>
-                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kode Pos
+                  </label>
+                  <input
+                    type="text"
+                    value={kodepos}
+                    readOnly
+                    placeholder="Akan terisi otomatis setelah memilih lokasi"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Provinsi
+                  </label>
+                  <input
+                    type="text"
+                    value={province}
+                    readOnly
+                    placeholder="Akan terisi otomatis setelah memilih lokasi"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kota/Kabupaten
+                  </label>
+                  <input
+                    type="text"
+                    value={city}
+                    readOnly
+                    placeholder="Akan terisi otomatis setelah memilih lokasi"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      onChange={(e) => setActive(e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Aktif</span>
+                  </label>
+                </div>
               </div>
 
-              {/* Thumbnails */}
-              <div className="flex overflow-x-auto p-2 bg-gray-50 gap-2">
-                {mediaItems.map((item, index) => (
-                  <div
-                    key={item.id}
-                    className={`relative cursor-pointer flex-shrink-0 ${
-                      currentSlide === index ? "ring-2 ring-blue-500" : ""
-                    }`}
-                    onClick={() => setCurrentSlide(index)}
-                  >
-                    {item.type === "image" ? (
-                      <img
-                        src={item.url}
-                        alt={`Thumbnail ${index + 1}`}
-                        className="h-16 w-16 object-cover rounded-md"
-                      />
-                    ) : (
-                      <div className="h-16 w-16 bg-gray-200 flex items-center justify-center rounded-md">
-                        <Film size={24} className="text-gray-600" />
-                      </div>
+              <div className="mb-4">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setTitle(e.target.value)
+                  }
+                  placeholder="Enter story title..."
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl"
+                  required
+                />
+              </div>
+
+              {/* Media Gallery / Slider (sama seperti sebelumnya) */}
+              {mediaItems.length > 0 && (
+                <div className="mb-6 border border-gray-300 rounded-lg bg-white overflow-hidden">
+                  <div className="relative">
+                    <div className="slider-content h-64 flex items-center justify-center bg-gray-100">
+                      {mediaItems[currentSlide].type === "image" ? (
+                        <img
+                          src={mediaItems[currentSlide].url}
+                          alt="Uploaded content"
+                          className="max-h-64 max-w-full object-contain"
+                        />
+                      ) : (
+                        <video
+                          src={mediaItems[currentSlide].url}
+                          controls
+                          className="max-h-64 max-w-full"
+                        />
+                      )}
+                    </div>
+
+                    {mediaItems.length > 1 && (
+                      <>
+                        <button
+                          onClick={() =>
+                            setCurrentSlide((prev) =>
+                              prev === 0 ? mediaItems.length - 1 : prev - 1
+                            )
+                          }
+                          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-1 rounded-full shadow-md hover:bg-gray-100"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 19l-7-7 7-7"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() =>
+                            setCurrentSlide((prev) =>
+                              prev === mediaItems.length - 1 ? 0 : prev + 1
+                            )
+                          }
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white p-1 rounded-full shadow-md hover:bg-gray-100"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </button>
+                      </>
                     )}
+                  </div>
+
+                  <div className="flex overflow-x-auto p-2 bg-gray-50 gap-2">
+                    {mediaItems.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className={`relative cursor-pointer flex-shrink-0 ${
+                          currentSlide === index ? "ring-2 ring-blue-500" : ""
+                        }`}
+                        onClick={() => setCurrentSlide(index)}
+                      >
+                        {item.type === "image" ? (
+                          <img
+                            src={item.url}
+                            alt={`Thumbnail ${index + 1}`}
+                            className="h-16 w-16 object-cover rounded-md"
+                          />
+                        ) : (
+                          <div className="h-16 w-16 bg-gray-200 flex items-center justify-center rounded-md">
+                            <Film size={24} className="text-gray-600" />
+                          </div>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMedia(item.id);
+                          }}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-end p-2 border-t border-gray-200">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeMedia(item.id);
-                      }}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
+                      onClick={() =>
+                        insertMediaToEditor(mediaItems[currentSlide])
+                      }
+                      className="flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
                     >
-                      <X size={14} />
+                      <Paperclip size={14} className="mr-1" />
+                      Insert into text
                     </button>
                   </div>
-                ))}
+                </div>
+              )}
+
+              <div className="mb-8 bg-white rounded-lg shadow-sm border border-gray-300">
+                <EditorToolbar
+                  editor={editor}
+                  onImageUpload={handleImageUpload}
+                  onVideoUpload={handleVideoUpload}
+                />
+                <EditorContent
+                  editor={editor}
+                  className="prose max-w-none p-4"
+                />
               </div>
 
-              {/* Action buttons */}
-              <div className="flex justify-end p-2 border-t border-gray-200">
+              {/* Error/Success messages */}
+              {submitError && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {submitError}
+                </div>
+              )}
+
+              {submitSuccess && (
+                <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                  Artikel berhasil disubmit!
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2">
                 <button
-                  onClick={() => insertMediaToEditor(mediaItems[currentSlide])}
-                  className="flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                  onClick={() => handleSubmit(true)}
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  <Paperclip size={14} className="mr-1" />
-                  Insert into text
+                  {isSubmitting ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : null}
+                  Save Draft
+                </button>
+                <button
+                  onClick={() => handleSubmit(false)}
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : null}
+                  Publish
                 </button>
               </div>
             </div>
-          )}
+          </main>
 
-          <div className="mb-8 bg-white rounded-lg shadow-sm border border-gray-300">
-            <EditorToolbar
-              editor={editor}
-              onImageUpload={handleImageUpload}
-              onVideoUpload={handleVideoUpload}
-            />
-            <EditorContent editor={editor} className="prose max-w-none p-4" />
-          </div>
+          <Footer />
 
-          <div className="flex justify-end">
-            <button className="px-6 py-2 bg-gray-200 rounded-md hover:bg-gray-300 mr-2">
-              Save Draft
-            </button>
-            <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              Publish
-            </button>
-          </div>
+          <style jsx global>{`
+            .ProseMirror {
+              min-height: 300px;
+              outline: none;
+            }
+            .ProseMirror p.is-editor-empty:first-child::before {
+              color: #adb5bd;
+              content: attr(data-placeholder);
+              float: left;
+              height: 0;
+              pointer-events: none;
+            }
+            .prose h1 {
+              font-size: 1.5rem;
+              font-weight: 700;
+              margin-top: 1.5rem;
+              margin-bottom: 0.5rem;
+            }
+            .prose h2 {
+              font-size: 1.25rem;
+              font-weight: 600;
+              margin-top: 1.25rem;
+              margin-bottom: 0.5rem;
+            }
+            .prose p {
+              margin-bottom: 0.75rem;
+            }
+            .prose blockquote {
+              border-left: 4px solid #e5e7eb;
+              padding-left: 1rem;
+              font-style: italic;
+              margin: 1rem 0;
+            }
+            .prose ul,
+            .prose ol {
+              padding-left: 1.5rem;
+              margin: 0.75rem 0;
+            }
+            .prose ul {
+              list-style-type: disc;
+            }
+            .prose ol {
+              list-style-type: decimal;
+            }
+            .prose code {
+              background-color: #f3f4f6;
+              padding: 0.125rem 0.25rem;
+              border-radius: 0.25rem;
+              font-family: monospace;
+            }
+            .prose img {
+              max-width: 100%;
+              height: auto;
+              margin: 1rem 0;
+            }
+            .prose .video-wrapper {
+              margin: 1rem 0;
+            }
+            .prose .video-wrapper video {
+              max-width: 100%;
+            }
+            .slider-content {
+              transition: all 0.3s ease;
+            }
+          `}</style>
         </div>
-      </main>
-
-      <Footer />
-
-      <style jsx global>{`
-        /* Editor styles */
-        .ProseMirror {
-          min-height: 300px;
-          outline: none;
-        }
-        .ProseMirror p.is-editor-empty:first-child::before {
-          color: #adb5bd;
-          content: attr(data-placeholder);
-          float: left;
-          height: 0;
-          pointer-events: none;
-        }
-        /* Prose styling */
-        .prose h1 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-top: 1.5rem;
-          margin-bottom: 0.5rem;
-        }
-        .prose h2 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          margin-top: 1.25rem;
-          margin-bottom: 0.5rem;
-        }
-        .prose p {
-          margin-bottom: 0.75rem;
-        }
-        .prose blockquote {
-          border-left: 4px solid #e5e7eb;
-          padding-left: 1rem;
-          font-style: italic;
-          margin: 1rem 0;
-        }
-        .prose ul,
-        .prose ol {
-          padding-left: 1.5rem;
-          margin: 0.75rem 0;
-        }
-        .prose ul {
-          list-style-type: disc;
-        }
-        .prose ol {
-          list-style-type: decimal;
-        }
-        .prose code {
-          background-color: #f3f4f6;
-          padding: 0.125rem 0.25rem;
-          border-radius: 0.25rem;
-          font-family: monospace;
-        }
-        .prose img {
-          max-width: 100%;
-          height: auto;
-          margin: 1rem 0;
-        }
-        .prose .video-wrapper {
-          margin: 1rem 0;
-        }
-        .prose .video-wrapper video {
-          max-width: 100%;
-        }
-        /* Slider styles */
-        .slider-content {
-          transition: all 0.3s ease;
-        }
-      `}</style>
-    </div>
+      </AuthCheck>
+    </>
   );
 }

@@ -55,7 +55,7 @@ export const authOptions = {
               name: hasil.data.name,
               email: hasil.data.email,
               image: hasil.data.profile_picture || null,
-              apiToken: "11111111xxx",
+              apiToken: hasil.data.token,
             };
           }
           throw new Error(hasil.message || "Authentication failed");
@@ -70,6 +70,35 @@ export const authOptions = {
   // Callbacks
   callbacks: {
     // Add custom properties to the JWT
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        try {
+          const baseUrl = process.env.NEXTAUTH_URL;
+          const response = await fetch(`${baseUrl}/api/auth/register`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: user.name,
+              email: user.email,
+              google_id: profile.sub,
+              image: user.image,
+            }),
+          });
+          if (!response.ok) {
+            console.error("Gagal mendaftarkan user melalui API", response);
+            //return false; // stop sign in jika register gagal
+            return false;
+          }
+        } catch (error) {
+          console.error("Error saat memanggil API register:", error);
+          return false;
+        }
+      }
+
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

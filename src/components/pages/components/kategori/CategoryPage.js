@@ -1,48 +1,96 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-// import { useAuth } from "../../../../context/AuthContext";
 import { fetchArticles, fetchCategories } from "../../../../utils/articles";
 import ImageGallery from "@/components/images/ImageGallery";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// Category Tag Component
-const CategoryTag = ({ text, active, onClick }) => {
+// Solusi 1: Horizontal Scrolling dengan tombol navigasi
+const HorizontalScrollCategories = ({
+  categories,
+  selectedCategory,
+  onCategoryClick,
+}) => {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScrollButtons = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollButtons();
+    const handleResize = () => checkScrollButtons();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [categories]);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 200;
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <button
-      className={`px-4 py-1 text-sm rounded-full mr-2 transition-colors ${
-        active
-          ? "bg-indigo-600 text-white hover:bg-indigo-700"
-          : "bg-white shadow-sm hover:bg-gray-50"
-      }`}
-      onClick={onClick}
-    >
-      {text}
-    </button>
+    <div className="relative mb-6">
+      <div className="flex items-center">
+        {/* Left scroll button */}
+        {canScrollLeft && (
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-0 z-10 p-2 bg-white shadow-md rounded-full hover:bg-gray-50 transition-colors"
+            style={{ transform: "translateX(-50%)" }}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Scrollable categories */}
+        <div
+          ref={scrollRef}
+          className="flex overflow-x-auto scrollbar-hide space-x-2 px-8"
+          onScroll={checkScrollButtons}
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {categories.map((category) => (
+            <button
+              key={category}
+              className={`px-4 py-2 text-sm rounded-full whitespace-nowrap flex-shrink-0 transition-colors ${
+                selectedCategory === category
+                  ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                  : "bg-white shadow-sm hover:bg-gray-50 border"
+              }`}
+              onClick={() => onCategoryClick(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
+        {/* Right scroll button */}
+        {canScrollRight && (
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-0 z-10 p-2 bg-white shadow-md rounded-full hover:bg-gray-50 transition-colors"
+            style={{ transform: "translateX(50%)" }}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    </div>
   );
 };
-// Nature images
-const natureImages = [
-  {
-    src: "/images/gambar.png",
-    alt: "Mountain landscape",
-    caption: "Mountain range at sunset",
-  },
-  {
-    src: "/images/gambar.png",
-    alt: "Ocean beach",
-    caption: "Sandy beach with waves",
-  },
-  {
-    src: "/images/gambar.png",
-    alt: "Dense forest",
-    caption: "Ancient forest with tall trees",
-  },
-  {
-    src: "/images/gambar.png",
-    alt: "Desert landscape",
-    caption: "Sand dunes at dawn",
-  },
-];
+
 // Featured Article Component
 const FeaturedArticle = ({ article }) => {
   // Nature images
@@ -73,7 +121,6 @@ const FeaturedArticle = ({ article }) => {
   return (
     <div className="mb-12">
       <div className="w-full h-120 rounded-lg bg-gray-200 mb-6">
-        {/* Placeholder for article image */}
         <ImageGallery images={natureImages.slice(0, 3)} />
       </div>
       <div className="flex items-center mb-3">
@@ -211,7 +258,6 @@ const CategoryPage = () => {
       try {
         const categoriesData = await fetchCategories();
         setCategories(["All", ...categoriesData]);
-
         // Check for category in URL
         const categoryParam = searchParams.get("category");
         if (categoryParam && categoriesData.includes(categoryParam)) {
@@ -234,7 +280,6 @@ const CategoryPage = () => {
           selectedCategory === "All" ? null : selectedCategory
         );
         setArticles(data.articles);
-        // setFeaturedArticle(data.featured);
         setFeaturedArticle(data.articles[0]);
       } catch (error) {
         console.error("Error loading articles:", error);
@@ -246,52 +291,29 @@ const CategoryPage = () => {
     loadArticles();
   }, [selectedCategory]);
 
-  //   // Check if user is authenticated
-  //   useEffect(() => {
-  //     if (!authLoading && !user) {
-  //       router.push("/login");
-  //     }
-  //   }, [user, authLoading, router]);
-
   // Handle category selection
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
-
-    // Update URL with the selected category
     const params = new URLSearchParams();
     if (category !== "All") {
       params.set("category", category);
     }
-
     const newUrl =
       window.location.pathname +
       (params.toString() ? `?${params.toString()}` : "");
     router.push(newUrl);
   };
 
-  //   if (authLoading) {
-  //     return <LoadingState />;
-  //   }
-
-  //   // If not authenticated, the useEffect will redirect
-  //   if (!user) {
-  //     return null;
-  //   }
-
   return (
     <main className="max-w-screen-xl mx-auto px-4 py-8">
       {/* Category Tags */}
-      <div className="flex flex-wrap mb-6">
-        {categories.map((category) => (
-          <CategoryTag
-            key={category}
-            text={category}
-            active={selectedCategory === category}
-            onClick={() => handleCategoryClick(category)}
-          />
-        ))}
+      <div className="rounded-lg p-4 bg-white">
+        <HorizontalScrollCategories
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onCategoryClick={handleCategoryClick}
+        />
       </div>
-
       {/* Category Title */}
       <h1 className="text-4xl font-bold text-center mb-10">
         {selectedCategory}
