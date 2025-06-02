@@ -34,7 +34,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { AuthCheck } from "@/components/auth-check";
+import { AuthCheck } from "@/lib/auth-check";
 
 interface EditorToolbarProps {
   editor: Editor | null;

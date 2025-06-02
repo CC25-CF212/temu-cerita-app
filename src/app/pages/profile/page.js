@@ -3,7 +3,7 @@ import Head from "next/head";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
-import { AuthCheck } from "@/components/auth-check";
+import { AuthCheck } from "@/lib/auth-check";
 import Header from "@/components/pages/components/layout/Header";
 import Footer from "@/components/pages/components/layout/Footer";
 

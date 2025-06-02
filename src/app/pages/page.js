@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Head from "next/head";
-import { AuthCheck } from "@/components/auth-check";
+import { AuthCheck } from "@/lib/auth-check";
 import Header from "@/components/pages/components/layout/Header";
 import Footer from "@/components/pages/components/layout/Footer";
 import { useLocationTracking } from "@/hooks/useLocationTracking";
