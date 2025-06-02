@@ -87,44 +87,44 @@ export default function Home() {
 
   return (
     <>
-      <AuthCheck>
-        <div className="min-h-screen bg-white">
-          <Head>
-            <title>TemuCerita - {activeTab}</title>
-            <meta
-              name="description"
-              content={`Discover ${activeTab} stories and articles on TemuCerita`}
-            />
-            <link rel="icon" href="/favicon.ico" />
-          </Head>
+      {/* <AuthCheck> */}
+      <div className="min-h-screen bg-white">
+        <Head>
+          <title>TemuCerita - {activeTab}</title>
+          <meta
+            name="description"
+            content={`Discover ${activeTab} stories and articles on TemuCerita`}
+          />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
 
-          <Header />
+        <Header />
 
-          <main className="flex flex-col md:flex-row max-w-screen-xl mx-auto px-4">
-            <MainContent
-              categories={categories}
-              activeTab={activeTab}
-              setActiveTab={handleTabChange}
-              // Location props
-              userLocation={userLocation}
-              locationLoading={locationLoading}
-              locationError={locationError}
-              isWatchingLocation={isWatchingLocation}
-              onRetryLocation={startLocationTracking}
-              onRefreshArticles={handleRefreshArticles}
-              // Articles props
-              articles={articles}
-              articlesLoading={articlesLoading}
-              hasMore={hasMore}
-              onLoadMore={handleLoadMore}
-            />
+        <main className="flex flex-col md:flex-row max-w-screen-xl mx-auto px-4">
+          <MainContent
+            categories={categories}
+            activeTab={activeTab}
+            setActiveTab={handleTabChange}
+            // Location props
+            userLocation={userLocation}
+            locationLoading={locationLoading}
+            locationError={locationError}
+            isWatchingLocation={isWatchingLocation}
+            onRetryLocation={startLocationTracking}
+            onRefreshArticles={handleRefreshArticles}
+            // Articles props
+            articles={articles}
+            articlesLoading={articlesLoading}
+            hasMore={hasMore}
+            onLoadMore={handleLoadMore}
+          />
 
-            <FixedSidePanel activeTab={activeTab} userLocation={userLocation} />
-          </main>
+          <FixedSidePanel activeTab={activeTab} userLocation={userLocation} />
+        </main>
 
-          <Footer />
-        </div>
-      </AuthCheck>
+        <Footer />
+      </div>
+      {/* </AuthCheck> */}
     </>
   );
 }

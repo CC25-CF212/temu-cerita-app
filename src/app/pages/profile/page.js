@@ -1,11 +1,11 @@
 "use client";
 import Head from "next/head";
 import { useState } from "react";
-import Header from "../../../components/pages/components/layout/Header";
-import Footer from "../../../components/pages/components/layout/Footer";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { AuthCheck } from "@/components/auth-check";
+import Header from "@/components/pages/components/layout/Header";
+import Footer from "@/components/pages/components/layout/Footer";
 
 // Profile Sidebar Component
 const ProfileSidebar = ({ dataUser }) => {
@@ -211,7 +211,7 @@ const Profile = () => {
   // Handle klik di luar area notifikasi untuk menutup panel
   useEffect(() => {
     if (status === "authenticated") {
-      console.log("User session loaded:");
+      console.log("User session loaded:", session);
       console.log("Name:", session?.user?.name);
       console.log("Email:", session?.user?.email);
       console.log("Image URL:", session?.user?.image);

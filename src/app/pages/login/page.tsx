@@ -34,6 +34,7 @@ export default function LoginForm() {
         setError(result!.error);
         setIsLoading(false);
       } else {
+        console.log("Login successful:", result);
         login(result);
         router.push("/pages");
         router.refresh(); // Refresh the page to update session data

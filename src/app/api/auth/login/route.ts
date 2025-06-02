@@ -11,9 +11,10 @@ export async function POST(request: Request) {
         name: res.user.name,
         email: res.user.email,
         profile_picture: "/images/gambar.png",
-        token: res.token,
+        token: res.user.token,
+        admin: res.user.admin,
       },
-      "Login successful"
+      res.message
     );
   } else {
     return errorResponse(res.message, res.statusCode);

@@ -14,6 +14,71 @@ const Header = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const logoutRef = useRef(null);
 
+  // Return empty component if no session
+  // Return login/register header if no session
+  if (!session) {
+    return (
+      <>
+        <header
+          className={`fixed top-0 left-0 right-0 z-50 border-b ${
+            darkMode
+              ? "border-gray-700 bg-gray-900 text-white"
+              : "border-gray-200 bg-white text-black"
+          }`}
+        >
+          <div className="max-w-screen-xl mx-auto flex items-center justify-between py-3 px-4">
+            <div className="flex items-center">
+              <Link href="/">
+                <h1
+                  className={`text-2xl font-bold ${
+                    darkMode ? "text-white" : "text-black"
+                  }`}
+                >
+                  TemuCerita
+                </h1>
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* <button
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-full ${
+                  darkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                }`}
+                aria-label="Toggle dark mode"
+              >
+                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button> */}
+
+              <Link
+                href="/pages/login"
+                className={`px-4 py-2 rounded-md border ${
+                  darkMode
+                    ? "border-gray-600 text-white hover:bg-gray-800"
+                    : "border-gray-300 text-black hover:bg-gray-50"
+                } transition-colors`}
+              >
+                Login
+              </Link>
+
+              <Link
+                href="/pages/daftar"
+                className={`px-4 py-2 rounded-md ${
+                  darkMode
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                } transition-colors`}
+              >
+                Register
+              </Link>
+            </div>
+          </div>
+        </header>
+        <div className="h-20"></div>
+      </>
+    );
+  }
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (

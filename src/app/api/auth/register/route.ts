@@ -13,13 +13,17 @@ export async function POST(request: Request) {
     image,
   };
   const res = await registerUser(newUser);
-  if (res.statusCode === "201") {
+  if (res.statusCode === "201" || res.statusCode === "200") {
     return successResponse(
       {
-        statusCode: res.statusCode,
-        status: res.status,
+        id: res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        profile_picture: "/images/gambar.png",
+        token: res.user.token,
+        admin: res.user.admin,
       },
-      "User registered successfully"
+      res.message
     );
   } else {
     return errorResponse(res.message, res.statusCode);

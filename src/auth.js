@@ -54,7 +54,8 @@ export const authOptions = {
               id: hasil.data.id,
               name: hasil.data.name,
               email: hasil.data.email,
-              image: hasil.data.profile_picture || null,
+              image: hasil.data.profile_picture || "/images/gambar.png",
+              admin: hasil.data.admin,
               apiToken: hasil.data.token,
             };
           }
@@ -71,6 +72,7 @@ export const authOptions = {
   callbacks: {
     // Add custom properties to the JWT
     async signIn({ user, account, profile }) {
+      console.log("signIn callback called", { user, account, profile });
       if (account?.provider === "google") {
         try {
           const baseUrl = process.env.NEXTAUTH_URL;
@@ -86,11 +88,16 @@ export const authOptions = {
               image: user.image,
             }),
           });
+
           if (!response.ok) {
             console.error("Gagal mendaftarkan user melalui API", response);
             //return false; // stop sign in jika register gagal
             return false;
           }
+          const hasil = await response.json();
+          user.id = hasil.data.id;
+          user.apiToken = hasil.data.token;
+          user.admin = hasil.data.admin;
         } catch (error) {
           console.error("Error saat memanggil API register:", error);
           return false;
@@ -99,10 +106,12 @@ export const authOptions = {
 
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.apiToken = user.apiToken;
+        token.admin = user.admin;
+        token.provider = account.provider;
       }
       return token;
     },
@@ -111,6 +120,8 @@ export const authOptions = {
     async session({ session, token }) {
       session.user.id = token.id;
       session.user.apiToken = token.apiToken;
+      session.user.admin = token.admin;
+      session.provider = token.provider;
       return session;
     },
   },
