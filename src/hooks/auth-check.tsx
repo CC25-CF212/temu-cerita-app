@@ -1,15 +1,18 @@
-// /components/auth-check.js
 "use client";
 
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect, ReactNode } from "react";
+
+interface AuthCheckProps {
+  children: ReactNode;
+}
 
 /**
  * Component to check authentication status
  * Use this in client components where you need to protect content
  */
-export function AuthCheck({ children }) {
+export function AuthCheck({ children }: AuthCheckProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();

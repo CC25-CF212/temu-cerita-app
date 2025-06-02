@@ -5,6 +5,18 @@ import CategoryPage from "../../../components/pages/components/kategori/Category
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+// Loading component untuk konsistensi UI
+function CategoryLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading categories...</p>
+      </div>
+    </div>
+  );
+}
+
 // Create a client component that uses searchParams
 function CategoryContent() {
   const router = useRouter();
@@ -18,20 +30,22 @@ function CategoryContent() {
     }
   }, [category, router]);
 
-  return <CategoryPage />;
+  return (
+    <Suspense fallback={<CategoryLoading />}>
+      <CategoryPage />
+    </Suspense>
+  );
 }
 
 export default function Category() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <Suspense
-        fallback={
-          <div className="flex justify-center py-10">Loading categories...</div>
-        }
-      >
-        <CategoryContent />
-      </Suspense>
+      <main className="container mx-auto px-4 py-8">
+        <Suspense fallback={<CategoryLoading />}>
+          <CategoryContent />
+        </Suspense>
+      </main>
       <Footer />
     </div>
   );

@@ -2,16 +2,6 @@ import { useAuthStore } from "@/store/authStore";
 import { redirect } from "next/navigation";
 
 export function ProtectedRoute({ children, adminOnly = false }) {
-  // const { isAuthenticated, isAdmin } = useAuthStore();
-
-  // if (!isAuthenticated) {
-  //   redirect("/pages/login");
-  // }
-
-  // if (adminOnly && !isAdmin()) {
-  //   redirect("/unauthorized");
-  // }
-
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isAdmin = useAuthStore((state) => state.isAdmin());
 

@@ -1,11 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Search, Edit, User, Bell, Moon, Sun, LogOut } from "lucide-react";
+import {
+  Search,
+  Edit,
+  User,
+  Bell,
+  Moon,
+  Sun,
+  LogOut,
+  Loader,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+
 const Header = () => {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession(); // ✅ Ambil status juga
+
+  // ✅ SEMUA HOOKS HARUS DIPANGGIL SEBELUM CONDITIONAL RETURN
   const [searchQuery, setSearchQuery] = useState("");
   const [darkMode, setDarkMode] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -14,9 +26,61 @@ const Header = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const logoutRef = useRef(null);
 
-  // Return empty component if no session
-  // Return login/register header if no session
-  if (!session) {
+  // ✅ useEffect HARUS SELALU DIPANGGIL
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
+      if (logoutRef.current && !logoutRef.current.contains(event.target)) {
+        setShowLogoutConfirm(false);
+      }
+    }
+
+    // Hanya add event listener jika session ada
+    if (session) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [session]);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const toggleNotifications = () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications) {
+      setNotificationCount(0);
+    }
+  };
+
+  const toggleLogoutConfirm = () => {
+    setShowLogoutConfirm(!showLogoutConfirm);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut({ redirect: false });
+      router.push("/pages/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  // ✅ KONDISI LOADING - RETURN NULL (TIDAK RENDER APAPUN)
+  if (status === "loading") {
+    return null; // Atau bisa return skeleton loader minimal
+  }
+
+  // ✅ KONDISI UNAUTHENTICATED - TAMPILKAN LOGIN/REGISTER
+  if (status === "unauthenticated") {
     return (
       <>
         <header
@@ -40,16 +104,6 @@ const Header = () => {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* <button
-                onClick={toggleDarkMode}
-                className={`p-2 rounded-full ${
-                  darkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                }`}
-                aria-label="Toggle dark mode"
-              >
-                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-              </button> */}
-
               <Link
                 href="/pages/login"
                 className={`px-4 py-2 rounded-md border ${
@@ -79,52 +133,7 @@ const Header = () => {
     );
   }
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
-        setShowNotifications(false);
-      }
-      if (logoutRef.current && !logoutRef.current.contains(event.target)) {
-        setShowLogoutConfirm(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [notificationRef, logoutRef, session]);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-
-  const toggleNotifications = () => {
-    setShowNotifications(!showNotifications);
-    if (!showNotifications) {
-      setNotificationCount(0);
-    }
-  };
-  const toggleLogoutConfirm = () => {
-    setShowLogoutConfirm(!showLogoutConfirm);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut({ redirect: false });
-
-      // Optional: handle any additional cleanup
-      //localStorage.removeItem("user_preferences");
-
-      // Redirect to login page
-      router.push("/pages/login");
-      router.refresh();
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
+  // ✅ KONDISI AUTHENTICATED - TAMPILKAN HEADER LENGKAP
   return (
     <>
       <header
@@ -180,117 +189,6 @@ const Header = () => {
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            {/* Notifikasi */}
-            {/* <div className="relative" ref={notificationRef}>
-              <button
-                onClick={toggleNotifications}
-                className={`p-2 rounded-full ${
-                  darkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                }`}
-                aria-label="Notifications"
-              >
-                <Bell size={20} />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </button> */}
-
-            {/* Panel Notifikasi */}
-            {/* {showNotifications && (
-                <div className="absolute right-0 mt-2 w-72 rounded-md shadow-lg z-50 overflow-hidden">
-                  <div
-                    className={`${
-                      darkMode
-                        ? "bg-gray-800 text-white"
-                        : "bg-white text-gray-900"
-                    }`}
-                  >
-                    <div
-                      className={`py-2 px-4 font-medium ${
-                        darkMode
-                          ? "border-b border-gray-700"
-                          : "border-b border-gray-200"
-                      }`}
-                    >
-                      <h3>Notifikasi</h3>
-                    </div>
-                    <div className="max-h-64 overflow-y-auto">
-                      <div
-                        className={`p-3 ${
-                          darkMode
-                            ? "border-b border-gray-700 hover:bg-gray-700"
-                            : "border-b border-gray-200 hover:bg-gray-50"
-                        }`}
-                      >
-                        <p className="text-sm">
-                          Cerita Anda mendapat 5 like baru
-                        </p>
-                        <p
-                          className={`text-xs ${
-                            darkMode ? "text-gray-400" : "text-gray-500"
-                          } mt-1`}
-                        >
-                          2 jam yang lalu
-                        </p>
-                      </div>
-                      <div
-                        className={`p-3 ${
-                          darkMode
-                            ? "border-b border-gray-700 hover:bg-gray-700"
-                            : "border-b border-gray-200 hover:bg-gray-50"
-                        }`}
-                      >
-                        <p className="text-sm">
-                          Pengguna @user123 mengikuti Anda
-                        </p>
-                        <p
-                          className={`text-xs ${
-                            darkMode ? "text-gray-400" : "text-gray-500"
-                          } mt-1`}
-                        >
-                          Kemarin
-                        </p>
-                      </div>
-                      <div
-                        className={`p-3 ${
-                          darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                        }`}
-                      >
-                        <p className="text-sm">
-                          Cerita baru dari penulis yang Anda ikuti
-                        </p>
-                        <p
-                          className={`text-xs ${
-                            darkMode ? "text-gray-400" : "text-gray-500"
-                          } mt-1`}
-                        >
-                          3 hari yang lalu
-                        </p>
-                      </div>
-                    </div>
-                    <div
-                      className={`py-2 px-4 text-center ${
-                        darkMode
-                          ? "border-t border-gray-700"
-                          : "border-t border-gray-200"
-                      }`}
-                    >
-                      <Link
-                        href="/notifications"
-                        className={`text-sm ${
-                          darkMode ? "text-blue-400" : "text-blue-500"
-                        } hover:underline`}
-                      >
-                        Lihat semua notifikasi
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )} */}
-            {/* </div> */}
-
             <Link
               href="/pages/article/post"
               className={`flex items-center gap-2 ${
@@ -321,6 +219,7 @@ const Header = () => {
                 )}
               </div>
             </Link>
+
             <div className="relative" ref={logoutRef}>
               <button
                 onClick={toggleLogoutConfirm}

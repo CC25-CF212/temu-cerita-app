@@ -8,6 +8,7 @@ import {
   Bookmark,
   BookmarkCheck,
 } from "lucide-react";
+import ShareDropdown from "./artikel/ShareDropdown";
 
 const ArticleCard = ({ article }) => {
   const [isLiked, setIsLiked] = useState(false);
@@ -72,12 +73,13 @@ const ArticleCard = ({ article }) => {
                 <span>{article.comments}</span>
               </div>
 
-              <button
+              {/* <button
                 onClick={handleShare}
                 className="mr-4 transition-transform duration-200 hover:scale-110"
               >
                 <Share2 size={16} />
-              </button>
+              </button> */}
+              <ShareDropdown id={article.id} />
 
               <button
                 onClick={handleSave}

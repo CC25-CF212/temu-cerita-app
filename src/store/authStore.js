@@ -45,8 +45,6 @@ export const useAuthStore = create(
       // Check if user is admin
       isAdmin: () => {
         const { user } = get();
-        console.log("isAdmin", user);
-        console.log("isAdmin user", user?.admin);
         return user?.admin || false;
       },
     }),

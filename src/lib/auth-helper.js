@@ -1,6 +1,6 @@
 // /lib/auth-helper.js
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth";
+import { authOptions } from "../auth.bck";
 
 /**
  * Get the session on the server side in App Router

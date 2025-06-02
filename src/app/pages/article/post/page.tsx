@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Footer from "@/components/pages/components/layout/Footer";
 import Header from "@/components/pages/components/layout/Header";
 import { EditorContent, useEditor, Editor } from "@tiptap/react";
@@ -32,9 +32,10 @@ import {
   X,
   Loader2,
   ChevronDown,
+  Loader,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { AuthCheck } from "@/lib/auth-check";
+import { AuthCheck } from "@/hooks/auth-check";
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -523,6 +524,7 @@ export default function EditorPage() {
   }));
   return (
     <>
+      {" "}
       <AuthCheck>
         <div className="min-h-screen flex flex-col bg-gray-50">
           <Head>

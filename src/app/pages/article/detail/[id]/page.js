@@ -1,12 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Header from "../../../../../components/pages/components/layout/Header";
 import Footer from "../../../../../components/pages/components/layout/Footer";
 import SidebarArticle from "@/components/pages/components/SidebarArticle";
-import CommentSection from "@/components/pages/components/CommentSection";
+import CommentSection from "@/components/pages/components/artikel/CommentSection";
 import InteractiveGallery from "@/components/pages/components/InteractiveGallery";
 import { galleryItems } from "@/data/galleryItems";
-export default function ArticleDetail() {
+
+// You can get this from URL params, props, or context
+const CURRENT_USER_ID = 123; // Replace with actual user ID from auth
+
+export default function ArticleDetail({ params }) {
+  const { id } = use(params); // ✅ Unwrap promise param
+
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
@@ -78,6 +84,8 @@ export default function ArticleDetail() {
       </div>
     );
   }
+  console.log("Article ID:", id); // Log the article ID for debugging
+  console.log("Current User ID:", CURRENT_USER_ID); // Log the current user ID for debugging
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -86,7 +94,8 @@ export default function ArticleDetail() {
       <main className="max-w-screen-xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row">
           {/* Main content */}
-          <div className="w-full lg:w-3/4 lg:pr-8">
+          {/* <div className="w-full lg:w-3/4 lg:pr-8"> */}
+          <div className="w-full lg:w-4/4 lg:pr-8">
             {/* Author info */}
             <div className="flex items-center mb-4">
               <div className="h-10 w-10 rounded-full bg-gray-300 mr-3"></div>
@@ -103,7 +112,7 @@ export default function ArticleDetail() {
             {/* Article title */}
             <h1 className="text-3xl md:text-4xl font-bold mb-6">
               Build an Agentic Workflow for your BigQuery data using LangGraph
-              and Gemini
+              and Gemini {id}
             </h1>
             {/* Gallery Component */}
             <InteractiveGallery galleryItems={galleryItems} className="mb-8" />
@@ -213,11 +222,16 @@ export default function ArticleDetail() {
             /> */}
 
             {/* Comments section */}
-            <CommentSection />
+            {/* Enhanced Comments section with API integration */}
+            <CommentSection
+              articleId={id}
+              currentUserId={CURRENT_USER_ID}
+              apiEndpoint="/api/comments"
+            />
           </div>
 
           {/* Sidebar */}
-          <SidebarArticle />
+          {/* <SidebarArticle /> */}
         </div>
       </main>
       {/* Footer */}

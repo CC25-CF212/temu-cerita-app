@@ -29,10 +29,12 @@
     }
   },
   "include": [
+    "**/*.js",
+    "**/*.jsx",
     "**/*.ts",
     "**/*.tsx",
-    "**/*.jsx",
-    "**/*.js",
+    ".next/types/**/*.ts",
+    "src/auth.bck"
   ],
   "exclude": [
     "node_modules"
