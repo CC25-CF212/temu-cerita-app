@@ -1,7 +1,7 @@
 "use client";
 
 import SideMenu from "@/components/SideMenu";
-import { mockUsers } from "@/data/mockData";
+import { userService } from "@/lib/userService";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
@@ -80,8 +80,8 @@ function UserModal({ isOpen, onClose, user, onSave, mode }) {
         email: user.email,
         password: "", // Don't show existing password
         profile_picture: user.profile_picture || "",
-        active: user.active,
-        admin: user.admin,
+        active: user.isActive ?? user.active,
+        admin: user.isAdmin ?? user.admin,
       });
     } else {
       setFormData({
@@ -257,7 +257,8 @@ function Notification({ message, type, onClose }) {
 }
 
 export default function UserPage() {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -274,29 +275,28 @@ export default function UserPage() {
     setSideMenuContainer(container);
   }, []);
 
+  // Load users on component mount
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  // Function to load users from API
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const userData = await userService.getAllUsers();
+      setUsers(userData);
+    } catch (error) {
+      console.error("Error loading users:", error);
+      showNotification("Gagal memuat data user!", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Function to show notification
   const showNotification = (message, type = "success") => {
     setNotification({ message, type });
-  };
-
-  // Function to save user data to JSON file (simulated)
-  const saveUsersToFile = async (updatedUsers) => {
-    try {
-      // In a real application, you would make an API call here
-      // For now, we'll simulate the file save operation
-      console.log("Saving users to file:", updatedUsers);
-
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Update local state
-      setUsers(updatedUsers);
-
-      return true;
-    } catch (error) {
-      console.error("Error saving users:", error);
-      return false;
-    }
   };
 
   const filteredUsers = users.filter((user) =>
@@ -334,18 +334,20 @@ export default function UserPage() {
   // Confirm delete user
   const confirmDelete = async () => {
     if (userToDelete) {
-      const updatedUsers = users.filter((user) => user.id !== userToDelete.id);
-      const success = await saveUsersToFile(updatedUsers);
-
-      if (success) {
+      try {
+        await userService.deleteUser(userToDelete.id);
         showNotification("User berhasil dihapus!", "success");
 
+        // Reload users after deletion
+        await loadUsers();
+
         // Adjust current page if needed
-        const newTotalPages = Math.ceil(updatedUsers.length / usersPerPage);
+        const newTotalPages = Math.ceil((users.length - 1) / usersPerPage);
         if (currentPage > newTotalPages && newTotalPages > 0) {
           setCurrentPage(newTotalPages);
         }
-      } else {
+      } catch (error) {
+        console.error("Error deleting user:", error);
         showNotification("Gagal menghapus user!", "error");
       }
     }
@@ -356,46 +358,100 @@ export default function UserPage() {
 
   // Handle save user (add or edit)
   const handleSaveUser = async (formData) => {
-    let updatedUsers;
+    try {
+      if (modalMode === "edit" && editingUser) {
+        // Update existing user
+        const updateData = {
+          name: formData.name,
+          email: formData.email,
+          profile_picture: formData.profile_picture || "",
+        };
 
-    if (modalMode === "edit" && editingUser) {
-      // Update existing user
-      const updateData = { ...formData };
+        await userService.updateUser(editingUser.id, updateData);
 
-      // If password is empty in edit mode, don't update it
-      if (modalMode === "edit" && !formData.password) {
-        delete updateData.password;
+        // Handle admin status if changed
+        const currentAdminStatus = editingUser.isAdmin ?? editingUser.admin;
+        if (formData.admin !== currentAdminStatus) {
+          await userService.setAdminStatus(editingUser.id, formData.admin);
+        }
+
+        // Handle active status if changed
+        const currentActiveStatus = editingUser.isActive ?? editingUser.active;
+        if (formData.active !== currentActiveStatus) {
+          await userService.toggleUserActive(editingUser.id);
+        }
+
+        showNotification("User berhasil diupdate!", "success");
+      } else {
+        // Add new user
+        const createData = {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          profile_picture: formData.profile_picture || "",
+          // isActive: formData.active,
+          // isAdmin: formData.admin,
+          // Add other fields as needed
+        };
+        console.log("Creating user with data:", createData);
+        const newUser = await userService.createUser(createData);
+
+        // Set admin status if needed
+        if (formData.admin) {
+          await userService.setAdminStatus(newUser.id, true);
+        }
+
+        // Set active status if needed (assuming new users are active by default)
+        if (!formData.active) {
+          await userService.toggleUserActive(newUser.id);
+        }
+
+        showNotification("User berhasil ditambahkan!", "success");
       }
 
-      // Add updated_at timestamp
-      updateData.updated_at = new Date().toISOString();
-
-      updatedUsers = users.map((user) =>
-        user.id === editingUser.id ? { ...user, ...updateData } : user
-      );
-    } else {
-      // Add new user
-      const newUser = {
-        id: Math.max(...users.map((u) => u.id), 0) + 1,
-        ...formData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      updatedUsers = [...users, newUser];
-    }
-
-    const success = await saveUsersToFile(updatedUsers);
-
-    if (success) {
-      const message =
-        modalMode === "edit"
-          ? "User berhasil diupdate!"
-          : "User berhasil ditambahkan!";
-      showNotification(message, "success");
-    } else {
+      // Reload users after save
+      await loadUsers();
+    } catch (error) {
+      console.error("Error saving user:", error);
       showNotification("Gagal menyimpan user!", "error");
     }
   };
+
+  // Handle toggle active status
+  const handleToggleActive = async (user) => {
+    try {
+      await userService.toggleUserActive(user.id);
+      showNotification("Status user berhasil diubah!", "success");
+      await loadUsers();
+    } catch (error) {
+      console.error("Error toggling user status:", error);
+      showNotification("Gagal mengubah status user!", "error");
+    }
+  };
+
+  // Handle toggle admin status
+  const handleToggleAdmin = async (user) => {
+    try {
+      const currentAdminStatus = user.isAdmin ?? user.admin;
+      await userService.setAdminStatus(user.id, !currentAdminStatus);
+      showNotification("Status admin berhasil diubah!", "success");
+      await loadUsers();
+    } catch (error) {
+      console.error("Error toggling admin status:", error);
+      showNotification("Gagal mengubah status admin!", "error");
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        {sideMenuContainer && createPortal(<SideMenu />, sideMenuContainer)}
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-500"></div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -506,7 +562,7 @@ export default function UserPage() {
                   Role
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                  Created At
+                  Active Date
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                   Action
@@ -532,7 +588,7 @@ export default function UserPage() {
                         alt="Profile"
                         className="w-8 h-8 rounded-full object-cover"
                         onError={(e) => {
-                          e.target.src = "/api/placeholder/32/32";
+                          e.target.src = "/images/gambar.png";
                         }}
                       />
                     ) : (
@@ -552,30 +608,34 @@ export default function UserPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.active
+                    <button
+                      onClick={() => handleToggleActive(user)}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 ${
+                        user.isActive ?? user.active
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {user.active ? "Aktif" : "Nonaktif"}
-                    </span>
+                      {user.isActive ?? user.active ? "Aktif" : "Nonaktif"}
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.admin
+                    <button
+                      onClick={() => handleToggleAdmin(user)}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 ${
+                        user.isAdmin ?? user.admin
                           ? "bg-blue-100 text-blue-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {user.admin ? "Admin" : "User"}
-                    </span>
+                      {user.isAdmin ?? user.admin ? "Admin" : "User"}
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    {user.created_at
-                      ? new Date(user.created_at).toLocaleDateString("id-ID")
+                    {user.createdAt
+                      ? new Date(user.createdAt).toLocaleDateString("id-ID")
+                      : user.created_at
+                      ? new Date(user.createdAt).toLocaleDateString("id-ID")
                       : "-"}
                   </td>
                   <td className="px-4 py-3 text-sm">

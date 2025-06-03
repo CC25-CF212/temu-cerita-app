@@ -22,11 +22,7 @@ ChartJS.register(
   Legend
 );
 
-interface CategoryChartProps {
-  categories: Category[];
-}
-
-export default function CategoryChart({ categories }: CategoryChartProps) {
+export default function CategoryChart({ categories }: any) {
   const options: ChartOptions<"bar"> = {
     responsive: true,
     plugins: {
@@ -47,16 +43,16 @@ export default function CategoryChart({ categories }: CategoryChartProps) {
   };
 
   const data = {
-    labels: categories.map((cat) => cat.name),
+    labels: categories.map((cat: any) => cat.name),
     datasets: [
       {
         label: "Current",
-        data: categories.map((cat) => cat.current),
+        data: categories.map((cat: any) => cat.current),
         backgroundColor: "rgba(75, 192, 192, 0.8)",
       },
       {
         label: "Previous",
-        data: categories.map((cat) => cat.previous),
+        data: categories.map((cat: any) => cat.previous),
         backgroundColor: "rgba(173, 216, 230, 0.8)",
       },
     ],

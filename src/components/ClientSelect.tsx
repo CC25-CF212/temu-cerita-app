@@ -4,6 +4,7 @@ import React from "react";
 import Select from "react-select";
 
 export default function ClientSelect({ options, value, onChange }: any) {
+  console.log("ClientSelect options:", value);
   return (
     <Select
       options={options}

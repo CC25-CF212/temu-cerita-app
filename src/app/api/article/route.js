@@ -96,6 +96,8 @@ export async function POST(request) {
       category,
       images: imageUrls,
     };
+    console.log("Payload:", payload);
+    console.log("Image URLs:", imageUrls);
     // call api
     return NextResponse.json({
       message: "Upload sukses",

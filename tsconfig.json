@@ -33,8 +33,8 @@
     "**/*.jsx",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    "src/auth.bck"
+    "src/components/admin/Article/ArticleTable copy.bck",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
