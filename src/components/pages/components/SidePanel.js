@@ -154,7 +154,9 @@ const SidePanel = ({ activeTab, userLocation }) => {
   const handleShowMoreWriters = () => {
     setShowAllWriters(!showAllWriters);
   };
-
+  if (articles.length === 0) {
+    return null; // Prevent rendering if no articles and still loading
+  }
   return (
     <aside className="w-full md:w-1/4 mt-8 md:mt-0 pl-0 md:pl-4">
       {/* Cultural Highlights */}
@@ -285,9 +287,17 @@ const SidePanel = ({ activeTab, userLocation }) => {
                     <User size={16} className="text-gray-500" />
                   </div>
                   <div>
-                    <p className="font-medium">{writer.name}</p>
+                    <p className="font-medium">
+                      {writer.name.length > 10
+                        ? writer.name.slice(0, 10) + "..."
+                        : writer.name}
+                    </p>
                     {/* <p className="text-sm text-gray-600">{writer.followers}</p> */}
-                    <p className="text-sm text-gray-600">{writer.email}</p>
+                    <p className="text-sm text-gray-600">
+                      {writer.email.length > 20
+                        ? writer.email.slice(0, 20) + "..."
+                        : writer.email}
+                    </p>
                   </div>
                 </div>
               ))}

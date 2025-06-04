@@ -476,9 +476,10 @@ export default function EditorPage() {
         `https://alamat.thecloudalert.com/api/cari/index/?keyword=${query}`
       );
       const data = await response.json();
-
+      console.log("Location search results:", data);
       if (data.status === 200 && data.result && data.result.length > 0) {
-        setLocationResults(data.result);
+        // Batasi hasil hanya 50 item pertama
+        setLocationResults(data.result.slice(0, 50));
         setLocationError("");
         setShowDropdown(true);
       } else {
@@ -575,7 +576,7 @@ export default function EditorPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Cari Lokasi (Kode Pos/Kelurahan/Kecamatan)
                   </label>
-                  <div className="relative">
+                  {/* <div className="relative">
                     <input
                       type="text"
                       value={searchQuery}
@@ -596,8 +597,57 @@ export default function EditorPage() {
                         <ChevronDown size={16} className="text-gray-400" />
                       )}
                     </div>
-                  </div>
+                  </div> */}
+                  <div className="flex gap-2 w-full">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)} // Hanya update state
+                      onFocus={() =>
+                        locationResults.length > 0 && setShowDropdown(true)
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSearchChange(searchQuery); // Call API saat Enter
+                        }
+                      }}
+                      placeholder="Ketik kode pos, kelurahan, atau kecamatan..."
+                      className="flex-1 px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
 
+                    {/* Icon loading/dropdown di dalam input */}
+                    <div className="absolute right-14 top-1/2 transform -translate-y-1/2 flex items-center">
+                      {isLoadingLocation ? (
+                        <Loader2
+                          size={16}
+                          className="animate-spin text-blue-500"
+                        />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-400" />
+                      )}
+                    </div>
+
+                    {/* Search Button - sejajar di sebelah kanan */}
+                    <button
+                      onClick={() => handleSearchChange(searchQuery)}
+                      className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      type="button"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                   {/* Dropdown Results */}
                   {showDropdown && locationResults.length > 0 && (
                     <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">

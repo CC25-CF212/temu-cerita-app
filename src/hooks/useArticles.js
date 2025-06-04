@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 
 // Updated API function with pagination support
 export async function staticArticlesByCategory(category, options = {}) {
-  const { page = 1, limit = 5 } = options;
+  const { page = 1, limit = 100 } = options;
   try {
     const url = new URL("/api/article", window.location.origin);
     if (category) url.searchParams.set("category", category);
@@ -35,12 +35,13 @@ export async function staticArticlesByCategory(category, options = {}) {
 
 // ✅ MOVED: Location-based articles function to top level
 export async function generateLocationArticles(locationData, options = {}) {
-  const { page = 1, limit = 5 } = options;
+  const { page = 1, limit = 100 } = options;
   try {
     const cityName = locationData?.city || "Unknown";
     const district = locationData?.district || "";
 
     const url = new URL("/api/article", window.location.origin);
+    url.searchParams.set("city", cityName);
     url.searchParams.set("page", page);
     url.searchParams.set("limit", limit);
 
@@ -51,29 +52,28 @@ export async function generateLocationArticles(locationData, options = {}) {
     }
 
     const data = await response.json();
+    console.log(
+      `Fetched ${data.articles.length} articles for location: ${cityName}, district: ${district}`
+    );
     const allArticles = data.articles || [];
 
-    // Filter articles based on location
-    const filteredArticles = allArticles.filter((article) => {
-      const aCity = article.city?.toLowerCase() || "";
-      const aProvince = article.province?.toLowerCase() || "";
-      const city = cityName.toLowerCase();
-      const dist = district.toLowerCase();
-
-      const matchCity = aCity.includes(city) || aProvince.includes(city);
-      const matchDistrict = dist
-        ? aCity.includes(dist) || aProvince.includes(dist)
-        : true;
-
-      return matchCity || matchDistrict;
-    });
-
-    console.log(`Filtered ${filteredArticles.length} location-based articles`);
+    // // Filter articles based on city only
+    // const filteredArticles = allArticles.filter((article) => {
+    //   const aCity = article.city?.toLowerCase() || "";
+    //   const aProvince = article.province?.toLowerCase() || "";
+    //   const searchCity = cityName.toLowerCase();
+    //   console.log(
+    //     `Filtering article: ${article.title}, city: ${aCity}, province: ${aProvince}, searchCity: ${searchCity}`
+    //   );
+    //   // Cek apakah searchCity ada di city atau province
+    //   return aCity.includes(searchCity) || aProvince.includes(searchCity);
+    // });
+    // console.log(`Filtered ${allArticles.length} location-based articles`);
 
     return {
-      articles: filteredArticles || [],
+      articles: allArticles || [],
       hasMore: data.hasMore || false,
-      totalCount: filteredArticles.length,
+      totalCount: allArticles.length,
       currentPage: page,
     };
   } catch (error) {
@@ -164,20 +164,19 @@ export const useArticles = () => {
         let apiResponse = null;
 
         if (activeTab === "Regional Exploration" && location) {
-          // ✅ USING: Top-level function
           apiResponse = await generateLocationArticles(location, {
             page: pageNum,
-            limit: 5,
+            limit: 100,
           });
         } else if (activeTab === "For You") {
           apiResponse = await staticArticlesByCategory("", {
             page: pageNum,
-            limit: 5,
+            limit: 100,
           });
         } else if (activeTab === "All Article") {
           apiResponse = await staticArticlesByCategory("", {
             page: pageNum,
-            limit: 5,
+            limit: 100,
           });
         } else {
           // Fallback for other tabs - simulate pagination

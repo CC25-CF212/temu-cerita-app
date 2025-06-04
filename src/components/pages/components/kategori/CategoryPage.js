@@ -249,7 +249,7 @@ const ArticleCard = ({
       <h3 className="text-xl font-bold mb-1">{title}</h3>
       <p className="text-gray-600 text-sm mb-2">{description}</p>
       <div className="flex items-center space-x-3 text-sm text-gray-500">
-        <span>{years} years</span>
+        <span>{years}</span>
         <div className="flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"

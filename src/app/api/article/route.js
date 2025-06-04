@@ -138,6 +138,7 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
+    const city = searchParams.get("city");
     const limit = parseInt(searchParams.get("limit")) || 10;
     const offset = parseInt(searchParams.get("offset")) || 0;
 
@@ -145,10 +146,12 @@ export async function GET(request) {
     if (category) {
       apiUrl += `&category=${encodeURIComponent(category)}`;
     }
-
+    if (city) {
+      apiUrl += `&city=${encodeURIComponent(city)}`;
+    }
+    console.log("API URL:", apiUrl);
     const response = await fetch(apiUrl);
     const data = await response.json();
-    console.log("API apiUrl:", apiUrl);
     const articles = Array.isArray(data.data?.articles)
       ? data.data.articles
       : [];
