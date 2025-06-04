@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 
 const LocationStatus = ({
   loading,
@@ -8,6 +8,30 @@ const LocationStatus = ({
   onRetry,
   onRefreshArticles,
 }) => {
+  // ✅ FIXED: Memoize location key to prevent unnecessary re-renders
+  const locationKey = useMemo(() => {
+    if (!userLocation) return null;
+    return `${userLocation.city}-${userLocation.district}-${Math.floor(
+      userLocation.timestamp / 60000
+    )}`;
+  }, [userLocation]);
+
+  // ✅ FIXED: Stable callback dengan dependency yang benar
+  const handleRefreshClick = useCallback(() => {
+    console.log("🔄 Location Status: Refresh button clicked");
+    if (userLocation && onRefreshArticles) {
+      onRefreshArticles(userLocation);
+    }
+  }, [userLocation, onRefreshArticles]); // ✅ Depend on actual values, not derived key
+
+  // ✅ FIXED: Stable retry callback
+  const handleRetryClick = useCallback(() => {
+    console.log("🔄 Location Status: Retry button clicked");
+    if (onRetry) {
+      onRetry();
+    }
+  }, [onRetry]);
+
   if (loading) {
     return (
       <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-center">
@@ -24,7 +48,7 @@ const LocationStatus = ({
       <div className="p-4 bg-red-50 rounded-lg border border-red-200">
         <p className="text-sm text-red-700">⚠️ {locationError}</p>
         <button
-          onClick={onRetry}
+          onClick={handleRetryClick}
           className="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
         >
           Try Again
@@ -56,7 +80,7 @@ const LocationStatus = ({
               </div>
             )}
             <button
-              onClick={() => onRefreshArticles(userLocation)}
+              onClick={handleRefreshClick}
               className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
             >
               Refresh Articles

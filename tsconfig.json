@@ -34,7 +34,8 @@
     "**/*.ts",
     "**/*.tsx",
     "src/components/admin/Article/ArticleTable copy.bck",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "src/app/pages/article/detail/[id]/page copy.bck"
   ],
   "exclude": [
     "node_modules"

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { IncomingForm } from "formidable";
 import cloudinary from "@/lib/cloudinary";
 import { Readable } from "stream";
+import { BASE_URL } from "@/lib/api/config";
 
 export const config = {
   api: {
@@ -59,6 +60,9 @@ export async function POST(request) {
     //   : fields.artikelId;
 
     // Pastikan semua field adalah string (karena formidable bisa jadi array)
+    const userId = Array.isArray(fields.user_id)
+      ? fields.user_id[0]
+      : fields.user_id;
     const title = Array.isArray(fields.title) ? fields.title[0] : fields.title;
     const content_html = Array.isArray(fields.content_html)
       ? fields.content_html[0]
@@ -88,6 +92,7 @@ export async function POST(request) {
 
     const imageUrls = uploadResults.map((r) => r.secure_url);
     const payload = {
+      userId,
       title,
       content_html,
       province,
@@ -96,11 +101,20 @@ export async function POST(request) {
       category,
       images: imageUrls,
     };
-    console.log("Payload:", payload);
-    console.log("Image URLs:", imageUrls);
+
+    const saveurl = `${BASE_URL}/articles`;
+
+    const updateResponse = await fetch(saveurl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const hasilUpdate = await updateResponse.json();
     // call api
     return NextResponse.json({
-      message: "Upload sukses",
+      message: hasilUpdate.message || "Artikel berhasil diupload",
       data: {
         title,
         content_html,
@@ -127,75 +141,37 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get("limit")) || 10;
     const offset = parseInt(searchParams.get("offset")) || 0;
 
-    console.log("GET /api/article - category:", category);
-    // TODO: Ganti dengan database query sebenarnya
-    // Contoh menggunakan Prisma atau database lainnya
-    /*
-    const articles = await db.article.findMany({
-      where: category ? { category } : undefined,
-      take: limit,
-      skip: offset,
-      orderBy: { createdAt: 'desc' }
-    });
-    */
-
-    // Mock data untuk sementara - ganti dengan query database
-    const mockArticles = [
-      {
-        id: 1,
-        category: "For You",
-        title: "When did your data REALLY arrive in BigQuery?",
-        description:
-          "A short guide on capturing data ingestion time in BigQuery",
-        content_html: "<p>Content here...</p>",
-        province: "DKI Jakarta",
-        city: "Jakarta",
-        active: true,
-        image: "/images/gambar.png",
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        likes: 45,
-        comments: 5,
-      },
-      {
-        id: 2,
-        category: "Technology",
-        title: "Building Scalable Microservices",
-        description: "Learn how to build and deploy microservices at scale",
-        content_html: "<p>Microservices content...</p>",
-        province: "Jawa Barat",
-        city: "Bandung",
-        active: true,
-        image: "/images/gambar.png",
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        likes: 32,
-        comments: 8,
-      },
-      {
-        id: 3,
-        category: "Google Cloud - Community",
-        title: "Optimizing Cloud Storage Costs",
-        description: "Tips and tricks to reduce your cloud storage expenses",
-        content_html: "<p>Cost optimization content...</p>",
-        province: "Jawa Timur",
-        city: "Surabaya",
-        active: true,
-        image: "/images/gambar.png",
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        likes: 28,
-        comments: 12,
-      },
-    ];
-
-    // Filter berdasarkan category jika ada
-    let filteredArticles = mockArticles;
+    let apiUrl = `${BASE_URL}/articles?page=1&limit=${limit}`;
     if (category) {
-      filteredArticles = mockArticles.filter((article) =>
-        article.category.toLowerCase().includes(category.toLowerCase())
-      );
+      apiUrl += `&category=${encodeURIComponent(category)}`;
     }
 
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    console.log("API apiUrl:", apiUrl);
+    const articles = Array.isArray(data.data?.articles)
+      ? data.data.articles
+      : [];
+
+    // Tidak perlu filter manual lagi karena category sudah difilter di API
+    // Tapi jika ingin filter tambahan di client:
+    // let filteredArticles = articles;
+    // if (category) {
+    //   filteredArticles = articles.filter((article) =>
+    //     article.category.toLowerCase().includes(category.toLowerCase())
+    //   );
+    // }
+
+    // let filteredArticles = mockArticles;
+    // if (category) {
+    //   filteredArticles = mockArticles.filter((article) =>
+    //     article.category.toLowerCase().includes(category.toLowerCase())
+    //   );
+    // }
+
     // Apply pagination
-    const paginatedArticles = filteredArticles.slice(offset, offset + limit);
+    //const paginatedArticles = filteredArticles.slice(offset, offset + limit);
+    const paginatedArticles = articles.slice(offset, offset + limit);
 
     // Format data sesuai dengan struktur yang diinginkan
     const formattedArticles = paginatedArticles.map((article) => ({
@@ -208,20 +184,26 @@ export async function GET(request) {
       ),
       likes: article.likes || 0,
       comments: article.comments || 0,
-      image: article.image || "/images/default.png",
+      image: article.images[0] || "/images/default.png",
+      images: article.images || [],
       province: article.province,
       city: article.city,
       active: article.active,
+      author: {
+        id: article.author?.id || "default-author-id",
+        name: article.author?.name || "Unknown Author",
+        email: article.author?.email || "unknown@example.com",
+      },
     }));
 
     return NextResponse.json({
       success: true,
       articles: formattedArticles,
-      totalCount: filteredArticles.length,
+      totalCount: articles.length,
       pagination: {
         limit,
         offset,
-        hasMore: offset + limit < filteredArticles.length,
+        hasMore: offset + limit < articles.length,
       },
       ...(category && { category }),
     });

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { fetchArticles, fetchCategories } from "../../../../utils/articles";
 import ImageGallery from "@/components/images/ImageGallery";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import AnimatedText from "@/lib/AnimatedText";
 
 // Solusi 1: Horizontal Scrolling dengan tombol navigasi
 const HorizontalScrollCategories = ({
@@ -93,8 +94,8 @@ const HorizontalScrollCategories = ({
 
 // Featured Article Component
 const FeaturedArticle = ({ article }) => {
-  // Nature images
-  const natureImages = [
+  // Fallback nature images
+  const fallbackNatureImages = [
     {
       src: "/images/gambar.png",
       alt: "Mountain landscape",
@@ -116,18 +117,50 @@ const FeaturedArticle = ({ article }) => {
       caption: "Sand dunes at dawn",
     },
   ];
+
+  if (!article) return null;
+
+  // Method 1: Convert article.images to natureImages format
+  const articleImages =
+    article.images && article.images.length > 0
+      ? article.images
+          .filter((img) => img && img.trim() !== "") // Filter out empty strings
+          .map((imageUrl, index) => ({
+            src: imageUrl,
+            alt: `Article image ${index + 1}`,
+            caption: `Image ${index + 1} from ${article.title || "article"}`,
+          }))
+      : [];
+
+  // Method 2: Use article images if available, otherwise use fallback
+  const displayImages =
+    articleImages.length > 0 ? articleImages : fallbackNatureImages;
+
+  // Method 3: Mix article images with fallback if needed
+  const mixedImages = [...articleImages];
+  while (
+    mixedImages.length < 3 &&
+    mixedImages.length < fallbackNatureImages.length
+  ) {
+    const fallbackIndex = mixedImages.length;
+    if (fallbackNatureImages[fallbackIndex]) {
+      mixedImages.push(fallbackNatureImages[fallbackIndex]);
+    } else {
+      break;
+    }
+  }
   if (!article) return null;
 
   return (
     <div className="mb-12">
       <div className="w-full h-120 rounded-lg bg-gray-200 mb-6">
-        <ImageGallery images={natureImages.slice(0, 3)} />
+        <ImageGallery images={displayImages.slice(0, 3)} />
       </div>
       <div className="flex items-center mb-3">
         <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center text-white mr-2">
           {article.authorInitial}
         </div>
-        <span className="font-medium">{article.author}</span>
+        <span className="font-medium">{article.author.name}</span>
       </div>
       <h2 className="text-3xl font-bold mb-2 text-center">{article.title}</h2>
       <p className="text-gray-600 text-center mb-4">{article.description}</p>
@@ -171,19 +204,45 @@ const FeaturedArticle = ({ article }) => {
     </div>
   );
 };
-
 // Article Card Component
 const ArticleCard = ({
+  id, // Add id prop
   category,
   title,
   description,
   years,
   likes,
   comments,
+  image,
+  onClick, // New prop for handling clicks
 }) => {
+  const handleClick = () => {
+    if (onClick) {
+      onClick({
+        id, // Include id in the click data
+        category,
+        title,
+        description,
+        years,
+        likes,
+        comments,
+        image,
+      });
+    }
+  };
+
   return (
-    <div className="mb-8 cursor-pointer hover:opacity-90 transition-opacity">
-      <div className="w-full h-56 bg-gray-200 rounded-lg mb-3"></div>
+    <div
+      className="mb-8 cursor-pointer hover:opacity-90 transition-opacity"
+      onClick={handleClick}
+    >
+      <div className="w-full h-56 bg-gray-200 rounded-lg mb-3">
+        <img
+          src={image}
+          alt={title}
+          className="object-cover w-full h-full rounded-lg"
+        />
+      </div>
       <div className="mb-1">
         <span className="text-sm text-gray-700">{category}</span>
       </div>
@@ -279,6 +338,7 @@ const CategoryPage = () => {
         const data = await fetchArticles(
           selectedCategory === "All" ? null : selectedCategory
         );
+        console.log("Fetched articles:", data.articles); // Debugging line
         setArticles(data.articles);
         setFeaturedArticle(data.articles[0]);
       } catch (error) {
@@ -303,22 +363,21 @@ const CategoryPage = () => {
       (params.toString() ? `?${params.toString()}` : "");
     router.push(newUrl);
   };
-
+  const handleCardClick = (articleData) => {
+    router.push(`/pages/article/detail/${articleData.id}`);
+  };
   return (
     <main className="max-w-screen-xl mx-auto px-4 py-8">
       {/* Category Tags */}
-      <div className="rounded-lg p-4 bg-white">
+      <div className="rounded-lg p-4 bg-white mb-4">
         <HorizontalScrollCategories
           categories={categories}
           selectedCategory={selectedCategory}
           onCategoryClick={handleCategoryClick}
         />
       </div>
-      {/* Category Title */}
-      <h1 className="text-4xl font-bold text-center mb-10">
-        {selectedCategory}
-      </h1>
-
+      <AnimatedText text={selectedCategory} />
+      <div className="mb-4"></div>
       {loading ? (
         <LoadingState />
       ) : (
@@ -332,12 +391,15 @@ const CategoryPage = () => {
               {articles.map((article) => (
                 <ArticleCard
                   key={article.id}
+                  id={article.id} // Pass the id prop
                   category={article.category}
                   title={article.title}
                   description={article.description}
                   years={article.years}
                   likes={article.likes}
                   comments={article.comments}
+                  image={article.image}
+                  onClick={handleCardClick}
                 />
               ))}
             </div>

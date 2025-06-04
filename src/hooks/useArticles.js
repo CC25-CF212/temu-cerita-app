@@ -4,8 +4,6 @@ import { useState, useCallback, useRef } from "react";
 export async function staticArticlesByCategory(category, options = {}) {
   const { page = 1, limit = 5 } = options;
   try {
-    console.log("Calling API with category:", category, "page:", page);
-
     const url = new URL("/api/article", window.location.origin);
     if (category) url.searchParams.set("category", category);
     url.searchParams.set("page", page.toString());
@@ -18,8 +16,6 @@ export async function staticArticlesByCategory(category, options = {}) {
     }
 
     const data = await response.json();
-    console.log("Fetched articles:", data);
-
     return {
       articles: data.articles || [],
       hasMore: data.hasMore || false,
@@ -28,6 +24,60 @@ export async function staticArticlesByCategory(category, options = {}) {
     };
   } catch (error) {
     console.error("Error fetching articles:", error);
+    return {
+      articles: [],
+      hasMore: false,
+      totalCount: 0,
+      currentPage: page,
+    };
+  }
+}
+
+// ✅ MOVED: Location-based articles function to top level
+export async function generateLocationArticles(locationData, options = {}) {
+  const { page = 1, limit = 5 } = options;
+  try {
+    const cityName = locationData?.city || "Unknown";
+    const district = locationData?.district || "";
+
+    const url = new URL("/api/article", window.location.origin);
+    url.searchParams.set("page", page);
+    url.searchParams.set("limit", limit);
+
+    const response = await fetch(url.toString());
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const allArticles = data.articles || [];
+
+    // Filter articles based on location
+    const filteredArticles = allArticles.filter((article) => {
+      const aCity = article.city?.toLowerCase() || "";
+      const aProvince = article.province?.toLowerCase() || "";
+      const city = cityName.toLowerCase();
+      const dist = district.toLowerCase();
+
+      const matchCity = aCity.includes(city) || aProvince.includes(city);
+      const matchDistrict = dist
+        ? aCity.includes(dist) || aProvince.includes(dist)
+        : true;
+
+      return matchCity || matchDistrict;
+    });
+
+    console.log(`Filtered ${filteredArticles.length} location-based articles`);
+
+    return {
+      articles: filteredArticles || [],
+      hasMore: data.hasMore || false,
+      totalCount: filteredArticles.length,
+      currentPage: page,
+    };
+  } catch (error) {
+    console.error("Error fetching location articles:", error);
     return {
       articles: [],
       hasMore: false,
@@ -95,169 +145,80 @@ export const useArticles = () => {
     ],
   };
 
-  // Generate location-based articles
-  const generateLocationArticles = (locationData, startId = Date.now()) => {
-    const cityName = locationData?.city || "Unknown";
-    const district = locationData?.district || "";
-
-    const baseArticles = [
-      {
-        id: startId + 1,
-        category: `${cityName} - Local Guide`,
-        title: `Hidden Gems dan Local Favorites di ${cityName}`,
-        description: `Tempat-tempat menarik yang hanya diketahui local residents di ${cityName}${
-          district ? ` area ${district}` : ""
-        }`,
-        days: Math.floor(Math.random() * 7) + 1,
-        likes: Math.floor(Math.random() * 200) + 50,
-        comments: Math.floor(Math.random() * 30) + 5,
-        image: "/images/gambar.png",
-      },
-      {
-        id: startId + 2,
-        category: `${cityName} - Kuliner`,
-        title: `Best Food Spots in ${cityName} - Local Recommendations`,
-        description: `Kuliner autentik dan tempat makan favorit warga lokal ${cityName}`,
-        days: Math.floor(Math.random() * 5) + 1,
-        likes: Math.floor(Math.random() * 150) + 30,
-        comments: Math.floor(Math.random() * 25) + 3,
-        image: "/images/gambar.png",
-      },
-      {
-        id: startId + 3,
-        category: `${cityName} - Lifestyle`,
-        title: `Living in ${cityName}: A Local's Perspective`,
-        description: `Tips dan insight tentang kehidupan sehari-hari di ${cityName}${
-          district ? ` khususnya area ${district}` : ""
-        }`,
-        days: Math.floor(Math.random() * 10) + 1,
-        likes: Math.floor(Math.random() * 100) + 20,
-        comments: Math.floor(Math.random() * 20) + 2,
-        image: "/images/gambar.png",
-      },
-    ];
-
-    // City-specific articles
-    if (cityName.toLowerCase().includes("jakarta")) {
-      baseArticles.push({
-        id: startId + 4,
-        category: "Jakarta - Transport",
-        title: "Navigating Jakarta: TransJakarta dan MRT Guide",
-        description:
-          "Panduan lengkap transportasi umum di Jakarta untuk daily commute",
-        days: 1,
-        likes: 245,
-        comments: 18,
-        image: "/images/gambar.png",
-      });
-    }
-
-    if (cityName.toLowerCase().includes("tangerang")) {
-      baseArticles.push({
-        id: startId + 5,
-        category: "Tangerang - Modern Living",
-        title: "Tangerang's Growing Hub: BSD dan Gading Serpong",
-        description:
-          "Eksplorasi area modern dan lifestyle di satellite city Jakarta",
-        days: 2,
-        likes: 167,
-        comments: 22,
-        image: "/images/gambar.png",
-      });
-    }
-
-    if (cityName.toLowerCase().includes("bandung")) {
-      baseArticles.push({
-        id: startId + 6,
-        category: "Bandung - Creative Scene",
-        title: "Bandung's Creative Hub: From Fashion to Art",
-        description:
-          "Menjelajahi scene kreatif dan komunitas seni di Kota Kembang",
-        days: 3,
-        likes: 189,
-        comments: 15,
-        image: "/images/gambar.png",
-      });
-    }
-
-    return baseArticles;
-  };
-
-  // Main fetch function with proper pagination
+  // ✅ SIMPLIFIED: fetchArticles with cleaner dependencies
   const fetchArticles = useCallback(
     async (activeTab, location = null, pageNum = 1, append = false) => {
-      if (loadingRef.current) return;
+      if (loadingRef.current) {
+        console.log("⏳ Fetch already in progress, skipping...");
+        return;
+      }
+
+      console.log(
+        `🚀 Fetching articles for ${activeTab}, page ${pageNum}, append: ${append}`
+      );
 
       loadingRef.current = true;
       setLoading(true);
 
       try {
-        let newArticles = [];
-        let apiHasMore = true;
+        let apiResponse = null;
 
         if (activeTab === "Regional Exploration" && location) {
-          // Generate location-based articles
-          newArticles = generateLocationArticles(
-            location,
-            Date.now() + pageNum * 1000
-          );
-          // For location articles, simulate pagination
-          apiHasMore = pageNum < 3; // Limit to 3 pages for location
+          // ✅ USING: Top-level function
+          apiResponse = await generateLocationArticles(location, {
+            page: pageNum,
+            limit: 5,
+          });
+        } else if (activeTab === "For You") {
+          apiResponse = await staticArticlesByCategory("", {
+            page: pageNum,
+            limit: 5,
+          });
+        } else if (activeTab === "All Article") {
+          apiResponse = await staticArticlesByCategory("", {
+            page: pageNum,
+            limit: 5,
+          });
         } else {
-          // API CALLS WITH PROPER PAGINATION
-          let apiResponse;
+          // Fallback for other tabs - simulate pagination
+          const baseArticles = staticArticlesByCategoryOld[activeTab] || [];
+          const articlesPerPage = 5;
+          const startIndex = (pageNum - 1) * articlesPerPage;
 
-          if (activeTab === "For You") {
-            console.log("Fetching For You articles from API...");
-            apiResponse = await staticArticlesByCategory("Google Cloud", {
-              page: pageNum,
-              limit: 5,
-            });
-          } else if (activeTab === "All Article") {
-            console.log("Fetching All Articles from API...");
-            apiResponse = await staticArticlesByCategory("", {
-              page: pageNum,
-              limit: 5,
-            });
-          } else {
-            // Fallback for other tabs - simulate pagination
-            const baseArticles = staticArticlesByCategoryOld[activeTab] || [];
-            const articlesPerPage = 5;
-            const startIndex = (pageNum - 1) * articlesPerPage;
-
-            const allArticles = [];
-            for (let i = 0; i < 20; i++) {
-              baseArticles.forEach((article, index) => {
-                allArticles.push({
-                  ...article,
-                  id: article.id + i * 100 + index,
-                  title: `${article.title} - Part ${i + 1}`,
-                  likes: article.likes + Math.floor(Math.random() * 50),
-                });
+          const allArticles = [];
+          for (let i = 0; i < 20; i++) {
+            baseArticles.forEach((article, index) => {
+              allArticles.push({
+                ...article,
+                id: article.id + i * 100 + index,
+                title: `${article.title} - Part ${i + 1}`,
+                likes: article.likes + Math.floor(Math.random() * 50),
               });
-            }
-
-            newArticles = allArticles.slice(
-              startIndex,
-              startIndex + articlesPerPage
-            );
-            apiHasMore = startIndex + articlesPerPage < allArticles.length;
+            });
           }
 
-          // Handle API response
-          if (apiResponse) {
-            newArticles = apiResponse.articles;
-            apiHasMore = apiResponse.hasMore;
+          const newArticles = allArticles.slice(
+            startIndex,
+            startIndex + articlesPerPage
+          );
+          apiResponse = {
+            articles: newArticles,
+            hasMore: startIndex + articlesPerPage < allArticles.length,
+            totalCount: allArticles.length,
+            currentPage: pageNum,
+          };
+        }
 
-            // Fallback to static if API returns empty
-            if (newArticles.length === 0 && pageNum === 1) {
-              console.log("API returned empty, using fallback data");
-              const fallbackArticles =
-                staticArticlesByCategoryOld[activeTab] || [];
-              newArticles = fallbackArticles.slice(0, 5);
-              apiHasMore = fallbackArticles.length > 5;
-            }
-          }
+        // Handle API response
+        let newArticles = apiResponse?.articles || [];
+        let apiHasMore = apiResponse?.hasMore || false;
+
+        // Fallback to static if API returns empty
+        if (newArticles.length === 0 && pageNum === 1) {
+          console.log("API returned empty, using fallback data");
+          const fallbackArticles = staticArticlesByCategoryOld[activeTab] || [];
+          newArticles = fallbackArticles.slice(0, 5);
+          apiHasMore = fallbackArticles.length > 5;
         }
 
         // Update state
@@ -272,10 +233,10 @@ export const useArticles = () => {
         setHasMore(apiHasMore);
 
         console.log(
-          `Loaded ${newArticles.length} articles for tab: ${activeTab}, hasMore: ${apiHasMore}`
+          `✅ Loaded ${newArticles.length} articles for tab: ${activeTab}, hasMore: ${apiHasMore}`
         );
       } catch (error) {
-        console.error("Error fetching articles:", error);
+        console.error("❌ Error fetching articles:", error);
 
         // Fallback articles
         const fallbackArticles = [
@@ -303,29 +264,39 @@ export const useArticles = () => {
         loadingRef.current = false;
       }
     },
-    []
+    [] // ✅ No dependencies needed since we use top-level functions
   );
 
-  // Load more with proper page increment
+  // ✅ SIMPLIFIED: loadMore with cleaner dependencies
   const loadMore = useCallback(
     (activeTab, location = null) => {
-      if (!hasMore || loading) return;
+      if (!hasMore || loading) {
+        console.log(
+          "⏹️ Load more skipped - hasMore:",
+          hasMore,
+          "loading:",
+          loading
+        );
+        return;
+      }
 
       const nextPage = page + 1;
+      console.log(`📄 Loading more - page ${nextPage}`);
       setPage(nextPage);
       fetchArticles(activeTab, location, nextPage, true);
     },
     [page, hasMore, loading, fetchArticles]
   );
 
-  // Reset articles
+  // ✅ SIMPLIFIED: resetArticles with no dependencies
   const resetArticles = useCallback(() => {
+    console.log("🔄 Resetting articles");
     setArticles([]);
     setPage(1);
     setHasMore(true);
     setLoading(false);
     loadingRef.current = false;
-  }, []);
+  }, []); // ✅ No dependencies needed
 
   return {
     articles,

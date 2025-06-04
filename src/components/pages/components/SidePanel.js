@@ -20,7 +20,7 @@ const SidePanel = ({ activeTab, userLocation }) => {
       return {
         id: firstArticle.id,
         title: firstArticle.title,
-        author: `by ${firstArticle.category.split(" - ")[0]} Community`,
+        author: `by ${firstArticle.author.name.split(" - ")[0]}`,
         description: firstArticle.description,
         date: `${firstArticle.days} ${
           firstArticle.days === 1 ? "day" : "days"
@@ -102,14 +102,18 @@ const SidePanel = ({ activeTab, userLocation }) => {
     const writerMap = new Map();
 
     articles.forEach((article) => {
-      const writerName = article.category.split(" - ")[0] || "Anonymous";
+      const writerName = article.author?.name.split(" - ")[0] || "Anonymous";
+      const email = article.author?.email || "unknown@example.com";
       if (!writerMap.has(writerName)) {
         writerMap.set(writerName, {
           id: writerMap.size + 1,
-          name: `${writerName} Writer`,
-          followers: `${Math.floor(Math.random() * 3) + 1}.${
-            Math.floor(Math.random() * 9) + 1
-          }M Followers`,
+          name: `${writerName}`,
+          email: email,
+          /* The `followers` property in the code snippet is generating a random number for the
+          followers count of a writer. */
+          // followers: `${Math.floor(Math.random() * 3) + 1}.${
+          //   Math.floor(Math.random() * 9) + 1
+          // }M Followers`,
         });
       }
     });
@@ -157,15 +161,21 @@ const SidePanel = ({ activeTab, userLocation }) => {
       <div className="mb-8">
         <h3 className="text-xl font-bold mb-4">Cultural Highlights</h3>
         <div className="mb-4">
-          <div className="bg-gray-200 h-44 w-full mb-4 rounded relative">
+          <div className="bg-gray-200 h-44 w-full mb-4 rounded relative overflow-hidden">
             {loading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <span className="text-sm">Featured Image</span>
-              </div>
+              <img
+                src={
+                  articles.length > 0
+                    ? culturalHighlight.image
+                    : "/images/gambar.png"
+                }
+                alt="Cultural Highlights"
+                className="w-full h-full object-cover"
+              />
             )}
           </div>
 
@@ -276,7 +286,8 @@ const SidePanel = ({ activeTab, userLocation }) => {
                   </div>
                   <div>
                     <p className="font-medium">{writer.name}</p>
-                    <p className="text-sm text-gray-600">{writer.followers}</p>
+                    {/* <p className="text-sm text-gray-600">{writer.followers}</p> */}
+                    <p className="text-sm text-gray-600">{writer.email}</p>
                   </div>
                 </div>
               ))}

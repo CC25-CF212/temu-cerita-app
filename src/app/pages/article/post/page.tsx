@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { AuthCheck } from "@/hooks/auth-check";
+import { useSession } from "next-auth/react";
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -290,7 +291,16 @@ export default function EditorPage() {
   const [selectedLocation, setSelectedLocation] =
     useState<LocationResult | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-
+  const { data: session, status } = useSession();
+  // Handle klik di luar area notifikasi untuk menutup panel
+  useEffect(() => {
+    if (status === "authenticated") {
+      console.log("User session loaded:", session);
+      console.log("ID:", session?.user?.id);
+      console.log("Email:", session?.user?.email);
+      console.log("Image URL:", session?.user?.image);
+    }
+  }, [session, status]);
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -339,9 +349,9 @@ export default function EditorPage() {
 
       setMediaItems([...mediaItems, ...newMediaItems]);
 
-      if (mediaItems.length === 0 && editor && newMediaItems.length > 0) {
-        editor.chain().focus().setImage({ src: newMediaItems[0].url }).run();
-      }
+      // if (mediaItems.length === 0 && editor && newMediaItems.length > 0) {
+      //   editor.chain().focus().setImage({ src: newMediaItems[0].url }).run();
+      // }
     }
   };
 
@@ -403,6 +413,7 @@ export default function EditorPage() {
       const formData = new FormData();
 
       // Tambahkan field teks
+      formData.append("user_id", session?.user?.id || "");
       formData.append("title", title);
       formData.append("content_html", content);
       formData.append("province", province);
