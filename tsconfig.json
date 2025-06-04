@@ -36,7 +36,7 @@
     "src/components/admin/Article/ArticleTable copy.bck",
     ".next/types/**/*.ts",
     "src/app/pages/article/detail/[id]/page copy.bck"
-  ],
+, "src/app/admin/layout copy.bck"  ],
   "exclude": [
     "node_modules"
   ]

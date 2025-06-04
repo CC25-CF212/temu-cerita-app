@@ -66,8 +66,12 @@ export default function DeleteConfirmationModal({
     setDeleteType("hard");
 
     try {
-      const response = await fetch(`/api/articles/${articleId}`, {
-        method: "DELETE",
+    const response = await fetch(`/api/articles/${articleId}/hard-delete`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ active: false }),
       });
 
       if (response.ok) {
