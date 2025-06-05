@@ -60,7 +60,11 @@ export default function ArticlePage() {
   }, [filters]);
 
   const handlePageChange = (page: number) => {
-    setFilters((prev) => ({ ...prev, page: page.toString() }));
+    // setFilters((prev) => ({ ...prev, page: page.toString() }));
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: page,
+    }));
   };
 
   const handleFilterChange = () => {

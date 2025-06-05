@@ -1,5 +1,4 @@
-// pages/api/comments/index.ts
-// POST /api/comments - Create a new comment
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -12,22 +11,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert into database
-    // const newComment = await prisma.comment.create({
-    //   data: {
-    //     text,
-    //     articleId,
-    //     userId,
-    //     createdAt: new Date()
-    //   },
-    //   include: {
-    //     user: {
-    //       select: { id: true, name: true, avatar: true }
-    //     }
-    //   }
-    // });
-
-    // Mock response for development
     const newComment = {
       id: Date.now(),
       name: "You", // Get from user session/auth

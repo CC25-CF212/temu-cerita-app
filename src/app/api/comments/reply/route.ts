@@ -1,5 +1,4 @@
-// pages/api/comments/reply.ts
-// POST /api/comments/reply - Create a reply to a comment
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -12,26 +11,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert reply into database
-    // const newReply = await prisma.reply.create({
-    //   data: {
-    //     text,
-    //     parentId,
-    //     articleId,
-    //     userId,
-    //     createdAt: new Date()
-    //   },
-    //   include: {
-    //     user: {
-    //       select: { id: true, name: true, avatar: true }
-    //     }
-    //   }
-    // });
-
-    // Mock response for development
     const newReply = {
       id: Date.now(),
-      name: "You", // Get from user session/auth
+      name: "You",
       text,
       time: "just now",
       likes: 0,

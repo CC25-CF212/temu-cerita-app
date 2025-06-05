@@ -2,13 +2,13 @@
 import { useEffect, useState } from "react";
 import Header from "../../../../../components/pages/components/layout/Header";
 import Footer from "../../../../../components/pages/components/layout/Footer";
-import SidebarArticle from "@/components/pages/components/SidebarArticle";
 import CommentSection from "@/components/pages/components/artikel/CommentSection";
 import InteractiveGallery from "@/components/pages/components/InteractiveGallery";
 import { galleryItems } from "@/data/galleryItems";
 import { formatDistanceToNow } from "date-fns";
-import { id as tset } from "date-fns/locale";
+import { ar, id as tset } from "date-fns/locale";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const CURRENT_USER_ID = 123; // Replace with actual user ID from auth
 
@@ -37,31 +37,12 @@ export default function ArticleDetail() {
 
   const [isMounted, setIsMounted] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [likes, setLikes] = useState(25);
+  const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
-  const [commentText, setCommentText] = useState("");
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: 1,
-      name: "Syntia",
-      time: "3 day",
-      text: "looks a lot like VS Code ... oh, that's indeed VS Code 😉",
-      likes: 45,
-      replies: 5,
-    },
-    {
-      id: 2,
-      name: "Budi Pratama",
-      time: "2 day",
-      text: "Great article! I've been looking for ways to integrate LangGraph with BigQuery. This is exactly what I needed.",
-      likes: 23,
-      replies: 2,
-    },
-  ]);
+  const { data: session } = useSession();
 
   useEffect(() => {
     setIsMounted(true);
@@ -87,6 +68,7 @@ export default function ArticleDetail() {
 
       if (hasil.success) {
         setArticle(hasil.data);
+        setLikes(hasil.data.likes || 0);
       } else {
         throw new Error(hasil.message || "Failed to fetch article");
       }
@@ -104,29 +86,56 @@ export default function ArticleDetail() {
     }
   }, [id]);
 
-  const handleLike = () => {
+  const handleLike = async (e: any, articleId: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const userId = session?.user?.id;
+
+    const response = await fetch(`/api/articles/likes/${articleId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId }),
+    });
+    if (!response.ok) {
+      console.error("Gagal menyukai artikel.");
+      return;
+    }
+    console.log("Like berhasil:", await response.json());
     setLikes((prev) => (isLiked ? prev - 1 : prev + 1));
     setIsLiked(!isLiked);
   };
 
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-  };
+  const handleBookmark = async (e: any, articleId: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const userId = session?.user?.id;
 
-  const handleCommentSubmit = () => {
-    if (commentText.trim()) {
-      setComments([
-        {
-          id: comments.length + 1,
-          name: "You",
-          time: "Just now",
-          text: commentText,
-          likes: 0,
-          replies: 0,
+    if (!userId) {
+      console.error("User belum login.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/articles/saved/${articleId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        ...comments,
-      ]);
-      setCommentText("");
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        console.error("Gagal menyimpan artikel.");
+        return;
+      }
+      const hasil = await response.json();
+      console.log("Simpan artikel berhasil:", hasil);
+      setIsBookmarked(!isBookmarked);
+    } catch (error) {
+      console.error("Terjadi kesalahan saat menyimpan artikel:", error);
     }
   };
 
@@ -209,12 +218,40 @@ export default function ArticleDetail() {
                 {article?.category}
               </span>
             </div>
+            <div className="flex items-center gap-4 py-4 border-y border-gray-200 mb-8">
+              <button
+                onClick={(e) => article && handleLike(e, article.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  isLiked
+                    ? "bg-red-100 text-red-600"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <span className="text-lg">{isLiked ? "❤️" : "🤍"}</span>
+                <span>{likes}</span>
+              </button>
 
-            <CommentSection
-              articleId={Number(id)}
-              currentUserId={CURRENT_USER_ID}
-              apiEndpoint="/api/comments"
-            />
+              <button
+                onClick={(e) => article && handleBookmark(e, article.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  isBookmarked
+                    ? "bg-blue-100 text-blue-600"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <span className="text-lg">{isBookmarked ? "🔖" : "📄"}</span>
+                <span>Bookmark</span>
+              </button>
+            </div>
+            {article?.id && session?.user?.id && session?.user?.name  ? (
+              <CommentSection
+                articleId={article.id}
+                currentUserId={session.user.id}
+                namaUser={session.user.name}
+              />
+            ) : (
+              <div>Loading komentar...</div> // Bisa ganti jadi spinner atau skeleton
+            )}
           </div>
         </div>
       </main>

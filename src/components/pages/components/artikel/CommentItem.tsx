@@ -1,31 +1,32 @@
+import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
-
+import { ar, id as tset } from "date-fns/locale";
 interface Reply {
   id: number;
   name: string;
   text: string;
   time: string;
   likes: number;
-  userId?: number;
+  userId?: string; // Changed from number to string
   parentId: number;
 }
 
 interface Comment {
-  id: number;
+  _id: number;
   name: string;
   text: string;
   time: string;
   likes: number;
   replies: Reply[];
-  userId?: number;
-  articleId: number;
+  userId?: string; // Changed from number to string
+  articleId: string; // Changed from number to string
 }
 
 interface CommentItemProps {
   comment: Comment;
   onReplySubmit: (commentId: number, replyText: string) => void;
   onLike: (commentId: number, isReply?: boolean) => void;
-  currentUserId?: number;
+  currentUserId?: string; // Changed from number to string
   depth?: number;
 }
 
@@ -50,13 +51,13 @@ export default function CommentItem({
   const handleReplySubmit = () => {
     if (!replyText.trim()) return;
 
-    onReplySubmit(comment.id, replyText);
+    onReplySubmit(comment._id, replyText);
     setReplyText("");
     setShowReplyInput(false);
   };
 
   const handleLike = () => {
-    onLike(comment.id, false);
+    onLike(comment._id, false);
     setIsLiked(!isLiked);
   };
 
@@ -111,7 +112,12 @@ export default function CommentItem({
             <span className="font-medium text-gray-900 text-sm">
               {comment.name}
             </span>
-            <span className="text-gray-500 text-xs">{comment.time}</span>
+            <span className="text-gray-500 text-xs">{comment?.time
+                                  ? formatDistanceToNow(new Date(comment.time), {
+                                      addSuffix: true,
+                                      locale: tset,
+                                    })
+                                  : "Unknown time"}</span>
             {comment.userId === currentUserId && (
               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
                 You
@@ -208,7 +214,7 @@ export default function CommentItem({
       {comment.replies.length > 0 && (
         <div className="mt-4 space-y-4">
           {comment.replies.slice(0, repliesToShow).map((reply) => (
-            <div key={reply.id} className="flex items-start space-x-3 ml-6">
+            <div key={`reply-${reply.id}-${reply.text}`} className="flex items-start space-x-3 ml-6">
               <div
                 className={`h-6 w-6 rounded-full ${getAvatarColor(
                   reply.name
@@ -235,7 +241,7 @@ export default function CommentItem({
                 </p>
 
                 <div className="flex items-center space-x-4 text-xs text-gray-500">
-                  <button
+                  {/* <button
                     onClick={() => handleReplyLike(reply.id)}
                     className="flex items-center space-x-1 hover:text-red-500 transition-colors"
                   >
@@ -253,7 +259,7 @@ export default function CommentItem({
                       />
                     </svg>
                     <span>{reply.likes}</span>
-                  </button>
+                  </button> */}
 
                   {depth < maxDepth - 1 && (
                     <button

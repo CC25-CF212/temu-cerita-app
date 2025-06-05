@@ -17,6 +17,7 @@ import {
   CheckCircle,
   XCircle,
   Check,
+  MoreHorizontal,
 } from "lucide-react";
 import { useState } from "react";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
@@ -31,7 +32,7 @@ interface ArticleTableProps {
   };
   onPageChange?: (page: number) => void;
   loading?: boolean;
-  onDataRefresh?: () => void; // Callback to refresh data instead of page reload
+  onDataRefresh?: () => void;
 }
 
 export default function ArticleTable({
@@ -39,13 +40,12 @@ export default function ArticleTable({
   pagination,
   onPageChange,
   loading = false,
+  onDataRefresh,
 }: ArticleTableProps) {
   const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
-    null
-  );
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [selectedArticleTitle, setSelectedArticleTitle] = useState<string>("");
 
   const handleDeleteClick = (id: string, title: string) => {
@@ -60,32 +60,17 @@ export default function ArticleTable({
   };
 
   const handleDeleteSuccess = () => {
-    // Contoh: Refetch data, atau filter artikel dari list
     console.log("Artikel berhasil dihapus / dinonaktifkan");
+    // Call refresh callback instead of page reload
+    if (onDataRefresh) {
+      onDataRefresh();
+    } else {
+      window.location.reload();
+    }
   };
+
   const handleEditArticle = (id: string) => {
     router.push(`/admin/article/post/${id}`);
-  };
-
-  const handleDeleteArticle = async (id: string) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus artikel ini?")) {
-      try {
-        // Implement delete API call here
-        const response = await fetch(`/api/articles/${id}`, {
-          method: "DELETE",
-        });
-
-        if (response.ok) {
-          // Refresh the data or remove from local state
-          window.location.reload(); // Simple approach, you can implement better state management
-        } else {
-          alert("Gagal menghapus artikel");
-        }
-      } catch (error) {
-        console.error("Error deleting article:", error);
-        alert("Terjadi kesalahan saat menghapus artikel");
-      }
-    }
   };
 
   const handleViewArticle = (id: string) => {
@@ -105,29 +90,71 @@ export default function ArticleTable({
     }
   };
 
+  // Generate pagination numbers with proper logic
+  console.log("Generating pagination numbers", { pagination });
+  const generatePaginationNumbers = () => {
+    if (!pagination) return [];
+    
+    const { currentPage, totalPages } = pagination;
+    const pages = [];
+    
+    if (totalPages <= 7) {
+      // Show all pages if total is 7 or less
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (currentPage <= 4) {
+        // Show pages 2, 3, 4, 5, ..., last
+        for (let i = 2; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push('...', totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        // Show 1, ..., last-4, last-3, last-2, last-1, last
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // Show 1, ..., current-1, current, current+1, ..., last
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...', totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
   // Loading skeleton
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
           <div className="h-6 bg-gray-200 rounded animate-pulse w-48"></div>
           <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mt-2"></div>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-center space-x-4 py-4 border-b border-gray-100"
+              className="flex items-center space-x-2 sm:space-x-4 py-4 border-b border-gray-100"
             >
               <div className="h-4 bg-gray-200 rounded animate-pulse w-8"></div>
               <div className="h-4 bg-gray-200 rounded animate-pulse flex-1"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-              <div className="flex space-x-2">
+              <div className="hidden sm:block h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="hidden md:block h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              <div className="hidden lg:block h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="flex space-x-1 sm:space-x-2">
                 <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
-                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
-                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                <div className="hidden sm:block h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                <div className="hidden sm:block h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
               </div>
             </div>
           ))}
@@ -139,7 +166,7 @@ export default function ArticleTable({
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <Tag className="w-5 h-5 text-emerald-600" />
           Daftar Artikel
@@ -149,51 +176,146 @@ export default function ArticleTable({
         </p>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Mobile Card View */}
+      <div className="block lg:hidden">
+        <div className="divide-y divide-gray-200">
+          {articles.map((article, index) => {
+            const pageStart = pagination
+              ? (pagination.currentPage - 1) * pagination.itemsPerPage
+              : 0;
+            return (
+              <div key={article.id} className="p-4 hover:bg-gray-50">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-medium text-gray-500">
+                        #{pageStart + index + 1}
+                      </span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        article.active 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {article.active ? 'Aktif' : 'Tidak Aktif'}
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-sm font-medium text-gray-900 truncate mb-1">
+                      {article.title}
+                    </h3>
+                    
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                      {article.description}
+                    </p>
+                    
+                    <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
+                      <div className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {article.author.name}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {formatDate(article.createdAt)}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-xs">
+                      <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                        {article.category}
+                      </span>
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <MapPin className="w-3 h-3" />
+                        {article.city}, {article.province}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 mt-2 text-xs">
+                      <div className="flex items-center gap-1 text-red-600">
+                        <Heart className="w-3 h-3" />
+                        {article.likes}
+                      </div>
+                      <div className="flex items-center gap-1 text-blue-600">
+                        <MessageCircle className="w-3 h-3" />
+                        {article.comments}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1 ml-4">
+                    <button
+                      onClick={() => handleViewArticle(article.id)}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 hover:bg-green-200 text-green-600 transition-colors"
+                      title="Lihat artikel"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleEditArticle(article.id)}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
+                      title="Edit artikel"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(article.id, article.title)}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-colors"
+                      title="Hapus artikel"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden lg:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                 No
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-80">
                 <div className="flex items-center gap-2">
                   <Tag className="w-4 h-4" />
-                  Title
+                  Artikel
                 </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4" />
                   Penulis
                 </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 Kategori
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
                   Lokasi
                 </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 Stats
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4" />
-                  Active
+                  Status
                 </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Tanggal
                 </div>
               </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 Aksi
               </th>
             </tr>
@@ -228,26 +350,25 @@ export default function ArticleTable({
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
                         <span className="text-emerald-600 font-medium text-xs">
-                          {article.author?.name?.charAt(0)?.toUpperCase() ||
-                            "A"}
+                          {article.author?.name?.charAt(0)?.toUpperCase() || "A"}
                         </span>
                       </div>
-                      <span>{article.author.name}</span>
+                      <span className="truncate">{article.author.name}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 truncate">
                       {article.category}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="text-xs">
-                      <div className="font-medium">{article.city}</div>
-                      <div className="text-gray-500">{article.province}</div>
+                      <div className="font-medium truncate">{article.city}</div>
+                      <div className="text-gray-500 truncate">{article.province}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center gap-3 text-xs">
+                    <div className="flex flex-col gap-1 text-xs">
                       <div className="flex items-center gap-1 text-red-600">
                         <Heart className="w-3 h-3" />
                         {article.likes}
@@ -259,28 +380,25 @@ export default function ArticleTable({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center gap-3 text-xs">
-                      <div className="flex items-center gap-1 text-blue-600">
-                        {article.active ? (
-                          <>
-                            <CheckCircle className="w-3 h-3 text-green-500" />
-                            Aktif
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="w-3 h-3 text-red-500" />
-                            Tidak Aktif
-                          </>
-                        )}
-                      </div>
+                    <div className="flex items-center gap-1 text-xs">
+                      {article.active ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-green-600">Aktif</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4 text-red-500" />
+                          <span className="text-red-600">Nonaktif</span>
+                        </>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(article.createdAt)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex items-center justify-center space-x-2">
-                      {/* View Button */}
+                    <div className="flex items-center justify-center space-x-1">
                       <button
                         onClick={() => handleViewArticle(article.id)}
                         className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 hover:bg-green-200 text-green-600 transition-colors"
@@ -288,8 +406,6 @@ export default function ArticleTable({
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-
-                      {/* Edit Button */}
                       <button
                         onClick={() => handleEditArticle(article.id)}
                         className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
@@ -297,12 +413,8 @@ export default function ArticleTable({
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
-
-                      {/* Delete Button */}
                       <button
-                        onClick={() =>
-                          handleDeleteClick(article.id, article.title)
-                        }
+                        onClick={() => handleDeleteClick(article.id, article.title)}
                         className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-colors"
                         title="Hapus artikel"
                       >
@@ -325,75 +437,87 @@ export default function ArticleTable({
         </div>
       )}
 
-      {/* API-based Pagination */}
+      {/* Improved Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
+        <div className="px-4 sm:px-6 py-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-700 order-2 sm:order-1">
               Menampilkan{" "}
-              {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} -{" "}
-              {Math.min(
-                pagination.currentPage * pagination.itemsPerPage,
-                pagination.totalItems
-              )}{" "}
-              dari {pagination.totalItems} artikel
+              <span className="font-medium">
+                {(pagination.currentPage - 1) * pagination.itemsPerPage + 1}
+              </span>{" "}
+              -{" "}
+              <span className="font-medium">
+                {Math.min(
+                  pagination.currentPage * pagination.itemsPerPage,
+                  pagination.totalItems
+                )}
+              </span>{" "}
+              dari{" "}
+              <span className="font-medium">{pagination.totalItems}</span> artikel
             </div>
 
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1 order-1 sm:order-2">
               {/* Previous Button */}
               <button
-                onClick={() => onPageChange?.(pagination.currentPage - 1)}
+                onClick={() => {
+                  if (pagination.currentPage > 1 && onPageChange) {
+                    onPageChange(pagination.currentPage - 1);
+                  }
+                }}
                 disabled={pagination.currentPage === 1}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
+                <ChevronLeft className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Previous</span>
               </button>
 
               {/* Page Numbers */}
               <div className="flex space-x-1">
-                {Array.from(
-                  { length: Math.min(pagination.totalPages, 5) },
-                  (_, i) => {
-                    let pageNum;
-                    if (pagination.totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (pagination.currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (
-                      pagination.currentPage >=
-                      pagination.totalPages - 2
-                    ) {
-                      pageNum = pagination.totalPages - 4 + i;
-                    } else {
-                      pageNum = pagination.currentPage - 2 + i;
-                    }
-
+                {generatePaginationNumbers().map((pageNum, index) => {
+                  if (pageNum === '...') {
                     return (
-                      <button
-                        key={pageNum}
-                        onClick={() => onPageChange?.(pageNum)}
-                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                          pagination.currentPage === pageNum
-                            ? "bg-emerald-600 text-white shadow-sm"
-                            : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
-                        }`}
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-500"
                       >
-                        {pageNum}
-                      </button>
+                        ...
+                      </span>
                     );
                   }
-                )}
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => {
+                        if (typeof pageNum === 'number' && onPageChange) {
+                          onPageChange(pageNum);
+                        }
+                      }}
+                      className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors ${
+                        pagination.currentPage === pageNum
+                          ? "bg-emerald-600 text-white shadow-sm"
+                          : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Next Button */}
               <button
-                onClick={() => onPageChange?.(pagination.currentPage + 1)}
+                onClick={() => {
+                  if (pagination.currentPage < pagination.totalPages && onPageChange) {
+                    onPageChange(pagination.currentPage + 1);
+                  }
+                }}
                 disabled={pagination.currentPage === pagination.totalPages}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight className="w-4 h-4 sm:ml-1" />
               </button>
             </div>
           </div>

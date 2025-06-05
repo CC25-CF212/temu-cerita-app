@@ -7,31 +7,32 @@ interface Reply {
   text: string;
   time: string;
   likes: number;
-  userId?: number;
+  userId?: string; // Changed from number to string
   parentId: number;
 }
 
 interface Comment {
-  id: number;
+  _id: number;
   name: string;
   text: string;
   time: string;
   likes: number;
   replies: Reply[];
-  userId?: number;
-  articleId: number;
+  userId?: string; // Changed from number to string
+  articleId: string; // Changed from number to string
 }
 
 interface CommentSectionProps {
-  articleId: number;
-  currentUserId?: number;
+  articleId: string; // Changed from number to string
+  currentUserId?: string; // Changed from number to string
   apiEndpoint?: string;
+  namaUser?: string;
 }
 
 export default function CommentSection({
   articleId,
   currentUserId,
-  apiEndpoint = "/api/comments",
+  namaUser,
 }: CommentSectionProps) {
   const [commentText, setCommentText] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
@@ -49,7 +50,9 @@ export default function CommentSection({
   const fetchComments = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${apiEndpoint}/by-article/${articleId}`);
+      const response = await fetch(
+        `/api/comments/mongodb/comments?articleId=${articleId}`
+      );
       if (response.ok) {
         const data = await response.json();
         setComments(data.comments || []);
@@ -60,7 +63,7 @@ export default function CommentSection({
       // Fallback to mock data for development
       setComments([
         {
-          id: 1,
+          _id: 1,
           name: "Alice Johnson",
           text: "This is a great article! Really helpful insights about LangGraph.",
           time: "2h ago",
@@ -78,7 +81,7 @@ export default function CommentSection({
           articleId: articleId,
         },
         {
-          id: 2,
+          _id: 2,
           name: "Charlie Davis",
           text: "I've been working with LangGraph for a few months now, and this workflow approach is exactly what I needed. Thanks for sharing!",
           time: "4h ago",
@@ -103,9 +106,10 @@ export default function CommentSection({
         text: commentText,
         articleId: articleId,
         userId: currentUserId,
+        namaUser: namaUser,
       };
 
-      const response = await fetch(apiEndpoint, {
+      const response = await fetch("/api/comments/mongodb/comments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,7 +124,7 @@ export default function CommentSection({
       } else {
         // Fallback for development - create local comment
         const mockComment: Comment = {
-          id: Date.now(),
+          _id: Date.now(),
           name: "You",
           text: commentText,
           time: "just now",
@@ -150,9 +154,10 @@ export default function CommentSection({
         parentId: commentId,
         articleId: articleId,
         userId: currentUserId,
+        namaUser: namaUser,
       };
 
-      const response = await fetch(`${apiEndpoint}/reply`, {
+      const response = await fetch("/api/comments/mongodb/comments/reply", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -163,7 +168,7 @@ export default function CommentSection({
       if (response.ok) {
         const createdReply = await response.json();
         const updatedComments = comments.map((comment) =>
-          comment.id === commentId
+          comment._id === commentId
             ? {
                 ...comment,
                 replies: [...comment.replies, createdReply],
@@ -183,7 +188,7 @@ export default function CommentSection({
         };
 
         const updatedComments = comments.map((comment) =>
-          comment.id === commentId
+          comment._id === commentId
             ? {
                 ...comment,
                 replies: [...comment.replies, mockReply],
@@ -199,16 +204,18 @@ export default function CommentSection({
 
   const handleLike = async (commentId: number, isReply: boolean = false) => {
     try {
-      const endpoint = isReply
-        ? `${apiEndpoint}/reply/${commentId}/like`
-        : `${apiEndpoint}/${commentId}/like`;
+      const endpoint = "/api/comments/mongodb/comments/like";
+      const body = {
+        userId: currentUserId,
+        commentId: commentId,
+      };
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId: currentUserId }),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
@@ -226,7 +233,7 @@ export default function CommentSection({
         } else {
           // Update comment likes
           const updatedComments = comments.map((comment) =>
-            comment.id === commentId
+            comment._id === commentId
               ? { ...comment, likes: result.likes }
               : comment
           );
@@ -246,7 +253,7 @@ export default function CommentSection({
           setComments(updatedComments);
         } else {
           const updatedComments = comments.map((comment) =>
-            comment.id === commentId
+            comment._id === commentId
               ? { ...comment, likes: comment.likes + 1 }
               : comment
           );
@@ -329,7 +336,7 @@ export default function CommentSection({
           <div className="space-y-6">
             {visibleComments.map((comment) => (
               <CommentItem
-                key={comment.id}
+                key={comment._id}
                 comment={comment}
                 onReplySubmit={handleReplySubmit}
                 onLike={handleLike}

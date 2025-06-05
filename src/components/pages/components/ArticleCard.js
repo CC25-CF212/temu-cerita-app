@@ -9,27 +9,74 @@ import {
   BookmarkCheck,
 } from "lucide-react";
 import ShareDropdown from "./artikel/ShareDropdown";
+import { useSession } from "next-auth/react";
 
 const ArticleCard = ({ article }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(article.likes);
-
+ const { data: session } = useSession();
   // Handler untuk like artikel
-  const handleLike = (e) => {
+  const handleLike = async (e, articleId) => {
     e.preventDefault();
     e.stopPropagation();
+    const userId = session?.user?.id;
+   
+    const response = await fetch(`/api/articles/likes/${articleId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (!response.ok) {
+      console.error("Gagal menyukai artikel.");
+      return;
+    }
+    const hasil = await response.json();
+    console.log("Like berhasil:", hasil);
     setIsLiked(!isLiked);
     setLikeCount((prevCount) => (isLiked ? prevCount - 1 : prevCount + 1));
   };
 
   // Handler untuk menyimpan artikel
-  const handleSave = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsSaved(!isSaved);
-  };
+  // const handleSave = (e) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   setIsSaved(!isSaved);
+  // };
+const handleSave = async (e, articleId) => {
+  e.preventDefault();
+  e.stopPropagation();
 
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    console.error("User belum login.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/articles/saved/${articleId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (!response.ok) {
+      console.error("Gagal menyimpan artikel.");
+      return;
+    }
+    const hasil = await response.json();
+    console.log("Simpan artikel berhasil:", hasil);
+    setIsSaved(!isSaved);
+  } catch (error) {
+    console.error("Terjadi kesalahan saat menyimpan artikel:", error);
+  }
+};
   // Handler untuk bagikan artikel
   const handleShare = (e) => {
     e.preventDefault();
@@ -56,7 +103,7 @@ const ArticleCard = ({ article }) => {
 
             <div className="flex items-center text-sm text-gray-500">
               <button
-                onClick={handleLike}
+                onClick={(e) => handleLike(e, article.id)}
                 className={`flex items-center mr-4 transition-colors duration-200 ${
                   isLiked ? "text-blue-500" : ""
                 }`}
@@ -82,7 +129,7 @@ const ArticleCard = ({ article }) => {
               <ShareDropdown id={article.id} />
 
               <button
-                onClick={handleSave}
+                onClick={(e) => handleSave(e, article.id)}
                 className={`ml-auto transition-colors duration-200 ${
                   isSaved ? "text-blue-500" : ""
                 }`}
