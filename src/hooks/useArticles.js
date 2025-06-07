@@ -1,6 +1,7 @@
+
 import { useState, useCallback, useRef } from "react";
 
-// Updated API function with pagination support
+
 export async function staticArticlesByCategory(category, options = {}) {
   const { page = 1, limit = 100 } = options;
   try {
@@ -33,43 +34,31 @@ export async function staticArticlesByCategory(category, options = {}) {
   }
 }
 
-// ✅ MOVED: Location-based articles function to top level
 export async function generateLocationArticles(locationData, options = {}) {
   const { page = 1, limit = 100 } = options;
   try {
     const cityName = locationData?.city || "Unknown";
     const district = locationData?.district || "";
 
-    const url = new URL("/api/article", window.location.origin);
-    url.searchParams.set("city", cityName);
-    url.searchParams.set("page", page);
-    url.searchParams.set("limit", limit);
+    // const url = new URL("/api/article", window.location.origin);
+    // url.searchParams.set("city", cityName);
+    // url.searchParams.set("page", page);
+    // url.searchParams.set("limit", limit);
 
-    const response = await fetch(url.toString());
+    // const response = await fetch(url.toString());
+    const response = await fetch("/api/article/kondisi", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ province: cityName}),
+  });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     const data = await response.json();
-    console.log(
-      `Fetched ${data.articles.length} articles for location: ${cityName}, district: ${district}`
-    );
     const allArticles = data.articles || [];
-
-    // // Filter articles based on city only
-    // const filteredArticles = allArticles.filter((article) => {
-    //   const aCity = article.city?.toLowerCase() || "";
-    //   const aProvince = article.province?.toLowerCase() || "";
-    //   const searchCity = cityName.toLowerCase();
-    //   console.log(
-    //     `Filtering article: ${article.title}, city: ${aCity}, province: ${aProvince}, searchCity: ${searchCity}`
-    //   );
-    //   // Cek apakah searchCity ada di city atau province
-    //   return aCity.includes(searchCity) || aProvince.includes(searchCity);
-    // });
-    // console.log(`Filtered ${allArticles.length} location-based articles`);
-
     return {
       articles: allArticles || [],
       hasMore: data.hasMore || false,
@@ -87,13 +76,46 @@ export async function generateLocationArticles(locationData, options = {}) {
   }
 }
 
+export async function getArtikeRekomendasi(options = {}) {
+  const { page = 1, limit = 100, ids = [] } = options;
+  try {
+    const response = await fetch("/api/articles/rekomendasi", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ids: ids,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      articles: data.articles || [],
+      hasMore: data.hasMore || false,
+      totalCount: data.totalCount || 0,
+      currentPage: page,
+    };
+  } catch (error) {
+    console.error("Error fetching articles:", error);
+    return {
+      articles: [],
+      hasMore: false,
+      totalCount: 0,
+      currentPage: page,
+    };
+  }
+}
 export const useArticles = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const loadingRef = useRef(false);
-
   // Static articles untuk fallback
   const staticArticlesByCategoryOld = {
     "For You": [
@@ -147,7 +169,13 @@ export const useArticles = () => {
 
   // ✅ SIMPLIFIED: fetchArticles with cleaner dependencies
   const fetchArticles = useCallback(
-    async (activeTab, location = null, pageNum = 1, append = false) => {
+    async (
+      activeTab,
+      location = null,
+      ids = [],
+      pageNum = 1,
+      append = false
+    ) => {
       if (loadingRef.current) {
         console.log("⏳ Fetch already in progress, skipping...");
         return;
@@ -162,14 +190,14 @@ export const useArticles = () => {
 
       try {
         let apiResponse = null;
-
         if (activeTab === "Regional Exploration" && location) {
           apiResponse = await generateLocationArticles(location, {
             page: pageNum,
             limit: 100,
           });
         } else if (activeTab === "For You") {
-          apiResponse = await staticArticlesByCategory("", {
+          apiResponse = await getArtikeRekomendasi({
+            ids: ids, 
             page: pageNum,
             limit: 100,
           });
@@ -214,7 +242,6 @@ export const useArticles = () => {
 
         // Fallback to static if API returns empty
         if (newArticles.length === 0 && pageNum === 1) {
-          console.log("API returned empty, using fallback data");
           const fallbackArticles = staticArticlesByCategoryOld[activeTab] || [];
           newArticles = fallbackArticles.slice(0, 5);
           apiHasMore = fallbackArticles.length > 5;

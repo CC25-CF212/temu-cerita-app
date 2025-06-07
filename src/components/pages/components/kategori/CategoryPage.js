@@ -335,10 +335,10 @@ const CategoryPage = () => {
     const loadArticles = async () => {
       setLoading(true);
       try {
+       
         const data = await fetchArticles(
           selectedCategory === "All" ? null : selectedCategory
         );
-        console.log("Fetched articles:", data.articles); // Debugging line
         setArticles(data.articles);
         setFeaturedArticle(data.articles[0]);
       } catch (error) {
@@ -353,6 +353,7 @@ const CategoryPage = () => {
 
   // Handle category selection
   const handleCategoryClick = (category) => {
+    console.log("category",category)
     setSelectedCategory(category);
     const params = new URLSearchParams();
     if (category !== "All") {

@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ar, id as tset } from "date-fns/locale";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useAuthStore } from "@/store/authStore";
 
 const CURRENT_USER_ID = 123; // Replace with actual user ID from auth
 
@@ -43,7 +44,8 @@ export default function ArticleDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
-
+  // Di dalam component
+  const { setArtikel } = useAuthStore(); // Ambil setArtikel dari store
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -91,7 +93,9 @@ export default function ArticleDetail() {
     e.stopPropagation();
 
     const userId = session?.user?.id;
-
+    // Set artikel ID ke store saat user melakukan like
+    //setArtikel(articleId);
+    // Set artikel dan otomatis fetch recommendations
     const response = await fetch(`/api/articles/likes/${articleId}`, {
       method: "POST",
       headers: {
@@ -104,6 +108,7 @@ export default function ArticleDetail() {
       return;
     }
     console.log("Like berhasil:", await response.json());
+    await setArtikel(articleId);
     setLikes((prev) => (isLiked ? prev - 1 : prev + 1));
     setIsLiked(!isLiked);
   };
@@ -243,7 +248,7 @@ export default function ArticleDetail() {
                 <span>Bookmark</span>
               </button>
             </div>
-            {article?.id && session?.user?.id && session?.user?.name  ? (
+            {article?.id && session?.user?.id && session?.user?.name ? (
               <CommentSection
                 articleId={article.id}
                 currentUserId={session.user.id}

@@ -8,6 +8,7 @@ import { useLocationTracking } from "@/hooks/useLocationTracking";
 import { useArticles } from "@/hooks/useArticles";
 import MainContent from "@/components/pages/components/artikel/MainContent";
 import FixedSidePanel from "@/components/pages/components/FixedSidePanel";
+import { useAuthStore } from "@/store/authStore";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("For You");
@@ -34,7 +35,12 @@ export default function Home() {
     loadMore,
     resetArticles,
   } = useArticles();
-
+  const {
+    setArtikel,
+    recommendations,
+    isLoadingRecommendations,
+    getRecommendations,
+  } = useAuthStore();
   const categories = ["For You", "All Article", "Regional Exploration"];
 
   // ✅ FIXED: Create stable location key to prevent unnecessary updates
@@ -84,7 +90,7 @@ export default function Home() {
       }
     } else {
       console.log(`📰 Fetching ${activeTab} articles`);
-      fetchArticles(activeTab);
+      fetchArticles(activeTab,null,recommendations);
     }
   }, [
     activeTab,

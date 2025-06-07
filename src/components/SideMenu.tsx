@@ -372,6 +372,31 @@ export default function SideMenu() {
                 User
               </Link>
             </li>
+            <li className="mb-2">
+              <Link
+                href="/admin/dashboard-model"
+                className={`flex items-center ${
+                  pathname === "/admin/dashboard-model" ? "bg-emerald-800" : ""
+                } hover:bg-emerald-800 rounded-md p-2 transition-colors`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-2"
+                >
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m17.7-3.7l-4.2 4.2m-5 5l-4.2 4.2M6.3 6.3l4.2 4.2m5 5l4.2 4.2"></path>
+                </svg>
+                Konfigurasi Model
+              </Link>
+            </li>
           </ul>
         </div>
 

@@ -1,15 +1,21 @@
 // File: utils/articles.js
 export const fetchArticles = async (category = null) => {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  //  console.log("get data",category)
+  // const url = new URL("/api/article", window.location.origin);
+  // url.searchParams.set("page", 1);
+  // url.searchParams.set("limit", 100);
 
-  // In a real app, this would be fetched from an API
-  // const data = require("../data/articles.json");
-  const url = new URL("/api/article", window.location.origin);
-  url.searchParams.set("page", 1);
-  url.searchParams.set("limit", 50);
+  // const response = await fetch(url.toString());
 
-  const response = await fetch(url.toString());
+  // Kirim request POST dengan JSON body
+  const response = await fetch("/api/article/kondisi", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ category }),
+  });
+
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -56,6 +62,7 @@ export const fetchArticles = async (category = null) => {
 
   // return hasil;
   if (category && category !== "All") {
+    console.log("filter katgeori");
     return {
       ...transformedData,
       articles: transformedData.articles.filter(
@@ -63,6 +70,7 @@ export const fetchArticles = async (category = null) => {
       ),
     };
   }
+  console.log("filter all");
   return transformedData;
 };
 export const fetchCategories = async () => {

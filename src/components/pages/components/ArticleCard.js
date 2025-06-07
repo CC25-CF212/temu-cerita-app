@@ -10,18 +10,20 @@ import {
 } from "lucide-react";
 import ShareDropdown from "./artikel/ShareDropdown";
 import { useSession } from "next-auth/react";
+import { useAuthStore } from "@/store/authStore";
 
 const ArticleCard = ({ article }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(article.likes);
- const { data: session } = useSession();
+  const { data: session } = useSession();
+  const { setArtikel } = useAuthStore(); // Ambil setArtikel dari store
   // Handler untuk like artikel
   const handleLike = async (e, articleId) => {
     e.preventDefault();
     e.stopPropagation();
     const userId = session?.user?.id;
-   
+
     const response = await fetch(`/api/articles/likes/${articleId}`, {
       method: "POST",
       headers: {
@@ -35,7 +37,7 @@ const ArticleCard = ({ article }) => {
       return;
     }
     const hasil = await response.json();
-    console.log("Like berhasil:", hasil);
+    await setArtikel(articleId);
     setIsLiked(!isLiked);
     setLikeCount((prevCount) => (isLiked ? prevCount - 1 : prevCount + 1));
   };
@@ -46,37 +48,37 @@ const ArticleCard = ({ article }) => {
   //   e.stopPropagation();
   //   setIsSaved(!isSaved);
   // };
-const handleSave = async (e, articleId) => {
-  e.preventDefault();
-  e.stopPropagation();
+  const handleSave = async (e, articleId) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  const userId = session?.user?.id;
+    const userId = session?.user?.id;
 
-  if (!userId) {
-    console.error("User belum login.");
-    return;
-  }
-
-  try {
-    const response = await fetch(`/api/articles/saved/${articleId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ userId }),
-    });
-
-    if (!response.ok) {
-      console.error("Gagal menyimpan artikel.");
+    if (!userId) {
+      console.error("User belum login.");
       return;
     }
-    const hasil = await response.json();
-    console.log("Simpan artikel berhasil:", hasil);
-    setIsSaved(!isSaved);
-  } catch (error) {
-    console.error("Terjadi kesalahan saat menyimpan artikel:", error);
-  }
-};
+
+    try {
+      const response = await fetch(`/api/articles/saved/${articleId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        console.error("Gagal menyimpan artikel.");
+        return;
+      }
+      const hasil = await response.json();
+      console.log("Simpan artikel berhasil:", hasil);
+      setIsSaved(!isSaved);
+    } catch (error) {
+      console.error("Terjadi kesalahan saat menyimpan artikel:", error);
+    }
+  };
   // Handler untuk bagikan artikel
   const handleShare = (e) => {
     e.preventDefault();
