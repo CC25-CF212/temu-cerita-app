@@ -2,52 +2,6 @@
 import { useState, useEffect } from "react";
 import LottieAnimation from "./LottieAnimation";
 
-// Sample data - replace with your actual JSON data
-const sampleData = {
-  popularArticles: [
-    {
-      id: 1,
-      title: "The Mountain Journey",
-      author: "Lia Sutanto",
-      likes: 1245,
-    },
-    { id: 2, title: "A Day in Jakarta", author: "Budi Permana", likes: 984 },
-    { id: 3, title: "Memories of Bali", author: "Indah Putri", likes: 876 },
-  ],
-  recommendedArticles: [
-    {
-      id: 4,
-      title: "Hidden Treasures of Jogja",
-      author: "Arif Rahman",
-      likes: 742,
-    },
-    {
-      id: 5,
-      title: "Surabaya's Street Food",
-      author: "Maya Wijaya",
-      likes: 658,
-    },
-    { id: 6, title: "Lombok Adventure", author: "Reza Pratama", likes: 589 },
-  ],
-  faqs: [
-    {
-      question: "How do I publish my story?",
-      answer:
-        "To publish your story, click on the 'Create' button on the homepage, write your story, and hit publish when you're done!",
-    },
-    {
-      question: "Can I edit my published story?",
-      answer:
-        "Yes, you can edit your published story by going to your profile, selecting the story, and clicking the edit button.",
-    },
-    {
-      question: "How do I become a premium member?",
-      answer:
-        "You can upgrade to premium by clicking on your profile picture, selecting 'Membership', and choosing a subscription plan.",
-    },
-  ],
-};
-
 const TemuCeritaChat = ({ darkMode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState("");
@@ -56,37 +10,36 @@ const TemuCeritaChat = ({ darkMode }) => {
     {
       id: 1,
       type: "bot",
-      text: "Hi! I'm Logan. Let's get you started with TemuCerita 😊",
+      text: "Hi! I'm CC25-CF212. Let's get you started with TemuCerita 😊",
       title: "TemuCerita is Indonesia's leading story sharing platform.",
     },
   ]);
   const [showOptions, setShowOptions] = useState(true);
-  const [data, setData] = useState(sampleData);
+  const [data, setData] = useState({
+    popularArticles: [],
+    recommendedArticles: [],
+    faqs: [
+      {
+        question: "How do I publish my story?",
+        answer: "To publish your story, click on the 'Create' button on the homepage, write your story, and hit publish when you're done!",
+      },
+      {
+        question: "Can I edit my published story?",
+        answer: "Yes, you can edit your published story by going to your profile, selecting the story, and clicking the edit button.",
+      },
+    ],
+  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const formatDate = () => {
       const days = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
+        "Sunday", "Monday", "Tuesday", "Wednesday", 
+        "Thursday", "Friday", "Saturday"
       ];
       const months = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
       ];
 
       const now = new Date();
@@ -108,26 +61,104 @@ const TemuCeritaChat = ({ darkMode }) => {
 
     document.addEventListener("keydown", handleKeyDown);
 
-    // In a real app, you would fetch the data here
-    // fetchData();
+    // Fetch data when component mounts
+    if (isOpen) {
+      fetchArticlesData();
+    }
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
-  // Simulate fetching data from a JSON source
-  const fetchData = async () => {
+  // Fetch artikel populer dan rekomendasi dari API
+  const fetchArticlesData = async () => {
+    setLoading(true);
     try {
-      // In a real application, you'd fetch from an API
-      // const response = await fetch('/api/temucerita-data');
-      // const jsonData = await response.json();
-      // setData(jsonData);
+      // Fetch artikel populer (dengan kategori atau kriteria tertentu)
+      const popularResponse = await fetch('/api/article/kondisi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          // // Kriteria untuk artikel populer - bisa disesuaikan
+          // category: '', // kosongkan untuk semua kategori
+          // province: '', // kosongkan untuk semua provinsi
+        }),
+      });
 
-      // For now, we'll use the sample data
-      setData(sampleData);
+      const popularData = await popularResponse.json();
+      
+      // Fetch artikel rekomendasi (dengan kriteria berbeda)
+      const recommendedResponse = await fetch('/api/articles/rekomendasi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          // Kriteria untuk artikel rekomendasi
+          // category: 'Travel', // contoh: fokus pada kategori Travel
+          // province: '', 
+          ids:[]
+        }),
+      });
+
+      const recommendedData = await recommendedResponse.json();
+
+      console.log("aaaa - recommendedData" ,recommendedData)
+      console.log("aaaa - popularData" ,popularData)
+      if (popularData.success && recommendedData.success) {
+        // Sort artikel populer berdasarkan likes (descending)
+        const sortedPopular = popularData.articles
+          .sort((a, b) => b.likes - a.likes)
+          .slice(0, 3); // ambil 3 teratas
+
+        // Sort artikel rekomendasi berdasarkan tanggal terbaru
+        const sortedRecommended = recommendedData.articles
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 3); // ambil 3 teratas
+
+        setData(prevData => ({
+          ...prevData,
+          popularArticles: sortedPopular.map(article => ({
+            id: article.id,
+            title: article.title,
+            author: article.author.name,
+            likes: article.likes,
+            category: article.category,
+            province: article.province,
+            city: article.city,
+          })),
+          recommendedArticles: sortedRecommended.map(article => ({
+            id: article.id,
+            title: article.title,
+            author: article.author.name,
+            likes: article.likes,
+            category: article.category,
+            province: article.province,
+            city: article.city,
+          })),
+        }));
+      }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching articles:", error);
+      // Fallback ke data sample jika API gagal
+      setData(prevData => ({
+        ...prevData,
+        popularArticles: [
+          { id: 1, title: "The Mountain Journey", author: "Lia Sutanto", likes: 1245 },
+          { id: 2, title: "A Day in Jakarta", author: "Budi Permana", likes: 984 },
+          { id: 3, title: "Memories of Bali", author: "Indah Putri", likes: 876 },
+        ],
+        recommendedArticles: [
+          { id: 4, title: "Hidden Treasures of Jogja", author: "Arif Rahman", likes: 742 },
+          { id: 5, title: "Surabaya's Street Food", author: "Maya Wijaya", likes: 658 },
+          { id: 6, title: "Lombok Adventure", author: "Reza Pratama", likes: 589 },
+        ],
+      }));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -148,13 +179,26 @@ const TemuCeritaChat = ({ darkMode }) => {
     setMessage("");
     setShowOptions(false);
 
-    // Check if the message matches any FAQ
+    // Improved FAQ matching with better keyword detection
     setTimeout(() => {
-      const matchedFaq = data.faqs.find(
-        (faq) =>
-          faq.question.toLowerCase().includes(message.toLowerCase()) ||
-          message.toLowerCase().includes(faq.question.toLowerCase())
-      );
+      const userMessage = message.toLowerCase();
+      let matchedFaq = null;
+
+      // Check for specific keywords in user message
+      if (userMessage.includes('publish') || userMessage.includes('post') || userMessage.includes('tulis')) {
+        matchedFaq = data.faqs.find(faq => faq.question.toLowerCase().includes('publish'));
+      } else if (userMessage.includes('edit') || userMessage.includes('ubah')) {
+        matchedFaq = data.faqs.find(faq => faq.question.toLowerCase().includes('edit'));
+      } else if (userMessage.includes('premium') || userMessage.includes('membership') || userMessage.includes('berlangganan')) {
+        matchedFaq = data.faqs.find(faq => faq.question.toLowerCase().includes('premium'));
+      } else {
+        // Original FAQ matching logic
+        matchedFaq = data.faqs.find(
+          (faq) =>
+            faq.question.toLowerCase().includes(userMessage) ||
+            userMessage.includes(faq.question.toLowerCase())
+        );
+      }
 
       if (matchedFaq) {
         setMessages([
@@ -166,15 +210,26 @@ const TemuCeritaChat = ({ darkMode }) => {
           },
         ]);
       } else {
+        // Enhanced bot response with suggestions
+        let botResponse = "Maaf, saya tidak mengerti pertanyaan Anda. ";
+        
+        if (userMessage.includes('artikel') || userMessage.includes('cerita')) {
+          botResponse += "Apakah Anda ingin melihat artikel populer atau rekomendasi artikel?";
+        } else if (userMessage.includes('help') || userMessage.includes('bantuan')) {
+          botResponse += "Silakan pilih topik bantuan di bawah ini atau tanyakan tentang cara publish artikel, edit artikel, atau membership premium.";
+        } else {
+          botResponse += "Silakan pilih topik di bawah atau ajukan pertanyaan lain tentang TemuCerita.";
+        }
+
         setMessages([
           ...newMessages,
           {
             id: newMessages.length + 1,
             type: "bot",
-            text: "Maaf, saya tidak mengerti pertanyaan Anda. Silakan pilih topik di bawah atau ajukan pertanyaan lain.",
+            text: botResponse,
           },
         ]);
-        // Show options again when the bot doesn't understand
+        
         setShowOptions(true);
       }
     }, 1000);
@@ -185,8 +240,15 @@ const TemuCeritaChat = ({ darkMode }) => {
 
     if (type === "article") {
       responseText = `"${option.title}" by ${option.author} is a great choice! This story has ${option.likes} likes.`;
+      
+      if (option.category) {
+        responseText += ` It's categorized under ${option.category}.`;
+      }
+      
+      if (option.province && option.city) {
+        responseText += ` This story is from ${option.city}, ${option.province}.`;
+      }
 
-      // Show loading message
       const newMessages = [
         ...messages,
         {
@@ -254,6 +316,7 @@ const TemuCeritaChat = ({ darkMode }) => {
     setIsOpen(!isOpen);
     if (!isOpen) {
       setShowOptions(true);
+      fetchArticlesData(); // Refresh data ketika chat dibuka
     }
   };
 
@@ -364,95 +427,118 @@ const TemuCeritaChat = ({ darkMode }) => {
               </div>
             ))}
 
+            {/* Loading State */}
+            {loading && (
+              <div className="flex justify-center items-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-sm">Loading articles...</span>
+              </div>
+            )}
+
             {/* Show Article Options */}
-            {showOptions && (
+            {showOptions && !loading && (
               <div className="mt-4">
-                <div
-                  className={`font-medium mb-2 ${
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Artikel Populer:
-                </div>
-                <div className="space-y-2">
-                  {data.popularArticles.map((article) => (
+                {/* Popular Articles */}
+                {data.popularArticles.length > 0 && (
+                  <>
                     <div
-                      key={article.id}
-                      onClick={() => handleOptionClick(article, "article")}
-                      className={`p-2 rounded-lg cursor-pointer transition-colors text-sm ${
-                        darkMode
-                          ? "bg-gray-700 hover:bg-gray-600"
-                          : "bg-gray-100 hover:bg-gray-200"
+                      className={`font-medium mb-2 ${
+                        darkMode ? "text-gray-300" : "text-gray-700"
                       }`}
                     >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <span className="font-medium">{article.title}</span> -{" "}
-                          {article.author}
-                        </div>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke={darkMode ? "#a0aec0" : "#4a5568"}
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                          <polyline points="15 3 21 3 21 9"></polyline>
-                          <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                      </div>
+                      Artikel Populer:
                     </div>
-                  ))}
-                </div>
+                    <div className="space-y-2">
+                      {data.popularArticles.map((article) => (
+                        <div
+                          key={article.id}
+                          onClick={() => handleOptionClick(article, "article")}
+                          className={`p-2 rounded-lg cursor-pointer transition-colors text-sm ${
+                            darkMode
+                              ? "bg-gray-700 hover:bg-gray-600"
+                              : "bg-gray-100 hover:bg-gray-200"
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="font-medium">{article.title}</span> - {article.author}
+                              <div className="text-xs opacity-75">
+                                {article.category} • {article.likes} likes
+                              </div>
+                            </div>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke={darkMode ? "#a0aec0" : "#4a5568"}
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
 
-                <div
-                  className={`font-medium mt-4 mb-2 ${
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Rekomendasi Untuk Anda:
-                </div>
-                <div className="space-y-2">
-                  {data.recommendedArticles.map((article) => (
+                {/* Recommended Articles */}
+                {data.recommendedArticles.length > 0 && (
+                  <>
                     <div
-                      key={article.id}
-                      onClick={() => handleOptionClick(article, "article")}
-                      className={`p-2 rounded-lg cursor-pointer transition-colors text-sm ${
-                        darkMode
-                          ? "bg-gray-700 hover:bg-gray-600"
-                          : "bg-gray-100 hover:bg-gray-200"
+                      className={`font-medium mt-4 mb-2 ${
+                        darkMode ? "text-gray-300" : "text-gray-700"
                       }`}
                     >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <span className="font-medium">{article.title}</span> -{" "}
-                          {article.author}
-                        </div>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke={darkMode ? "#a0aec0" : "#4a5568"}
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                          <polyline points="15 3 21 3 21 9"></polyline>
-                          <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                      </div>
+                      Rekomendasi Untuk Anda:
                     </div>
-                  ))}
-                </div>
+                    <div className="space-y-2">
+                      {data.recommendedArticles.map((article) => (
+                        <div
+                          key={article.id}
+                          onClick={() => handleOptionClick(article, "article")}
+                          className={`p-2 rounded-lg cursor-pointer transition-colors text-sm ${
+                            darkMode
+                              ? "bg-gray-700 hover:bg-gray-600"
+                              : "bg-gray-100 hover:bg-gray-200"
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="font-medium">{article.title}</span> - {article.author}
+                              <div className="text-xs opacity-75">
+                                {article.category} • {article.likes} likes
+                              </div>
+                            </div>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke={darkMode ? "#a0aec0" : "#4a5568"}
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
 
+                {/* FAQ Section */}
                 <div
                   className={`font-medium mt-4 mb-2 ${
                     darkMode ? "text-gray-300" : "text-gray-700"
